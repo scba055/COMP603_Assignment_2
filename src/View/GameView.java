@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Map;
 import Controller.SaveLoadController;
+import Controller.EncounterController;
 
 // includes old code and code that would create the UI for the game
 public class GameView extends JFrame {
@@ -19,6 +20,9 @@ public class GameView extends JFrame {
     private final Map<String, Enemy> enemies;
     private final JTextArea mapDisplay;
     //private final JTextArea playerStats;
+    private JPanel controlPanel;
+    private JPanel optionsPanel;
+    private JTextArea gameLog;
     
     public GameView(Player player, GameMap map, Map<String, Enemy> enemies) {
         this.player = player;
@@ -26,51 +30,22 @@ public class GameView extends JFrame {
         this.enemies = enemies;
         
         // setting up the UI
-        setTitle("ywj5422's world");
+        setTitle("YWJ5422's World");
         setSize(600, 400); // will change these dimensions as I go
         setLayout(new BorderLayout());
         
         mapDisplay = new JTextArea(10,30);
         mapDisplay.setEditable(false);
-        add(new JScrollPane(mapDisplay), BorderLayout.CENTER);
-        
-        // adding movement and interactions buttons for user
-        JPanel controlPanel = new JPanel(new GridLayout(2,3));
-        JButton upButton = new JButton("△");
-        JButton rightButton = new JButton("▷");
-        JButton downButton = new JButton("▽");
-        JButton leftButton = new JButton("◁");
-        JButton interactButton = new JButton("◖"); // wanting to emulate a gameboy
-        JButton backButton = new JButton("◗");
-        // symbols from: https://www.alt-codes.net/
-        
-        // adding buttons to control panel
-        controlPanel.add(upButton);
-        controlPanel.add(leftButton);
-        controlPanel.add(interactButton);
-        controlPanel.add(backButton);
-        controlPanel.add(rightButton);
-        controlPanel.add(downButton);
-        
-        add(controlPanel, BorderLayout.SOUTH);
-        
-        // implementing Player info and sign out buttons
+        gameLog = new JTextArea();
+        gameLog.setEditable(false);
         JPanel optionsPanel = new JPanel(new GridLayout(1,2));
-        JButton infoButton = new JButton("Info");
-        JButton signOutButton = new JButton("Sign Out");
-        // adding buttons to options panel
-        optionsPanel.add(infoButton);
-        optionsPanel.add(signOutButton);
-        add(optionsPanel, BorderLayout.NORTH);
         
-        // setting up the event listeners for the buttons
-        upButton.addActionListener(e -> player.movePlayer('w', map));
-        leftButton.addActionListener(e -> player.movePlayer('a', map));
-        downButton.addActionListener(e -> player.movePlayer('s', map));
-        rightButton.addActionListener(e -> player.movePlayer('d', map));
-        interactButton.addActionListener(e -> interact());
-        infoButton.addActionListener(e -> displayPlayerStats(player));
-        signOutButton.addActionListener(e -> signOut());
+        addControlButtons();
+        addOptionsButtons();
+        
+        add(new JScrollPane(mapDisplay), BorderLayout.CENTER);
+        add(controlPanel, BorderLayout.SOUTH);
+        add(optionsPanel, BorderLayout.NORTH);
         
         // wanting to make the default close window ops to ask the user to save
         addWindowListener(new WindowAdapter() {
@@ -83,6 +58,50 @@ public class GameView extends JFrame {
         // display initial game state
         displayMap(map, player, enemies);
         setVisible(true);
+    }
+    
+    // adds directional buttons and interaction buttons
+    private void addControlButtons() {
+        // adding movement and interactions buttons for user
+        JPanel controlPanel = new JPanel(new GridLayout(2,3));
+        JButton upButton = new JButton("△");
+        JButton rightButton = new JButton("▷");
+        JButton downButton = new JButton("▽");
+        JButton leftButton = new JButton("◁");
+        JButton interactButton = new JButton("◖"); // wanting to emulate a gameboy
+        JButton backButton = new JButton("◗");
+        // symbols from: https://www.alt-codes.net/
+        
+        upButton.addActionListener(e -> player.movePlayer('w', map));
+        leftButton.addActionListener(e -> player.movePlayer('a', map));
+        downButton.addActionListener(e -> player.movePlayer('s', map));
+        rightButton.addActionListener(e -> player.movePlayer('d', map));
+        interactButton.addActionListener(e -> interact(player.getInteraction()));
+        
+        // adding buttons to control panel
+        controlPanel.add(upButton);
+        controlPanel.add(leftButton);
+        controlPanel.add(interactButton);
+        controlPanel.add(backButton);
+        controlPanel.add(rightButton);
+        controlPanel.add(downButton);
+    }
+    
+    // adding buttons for the options menu
+    private void addOptionsButtons() {
+        JButton infoButton = new JButton("Info");
+        JButton signOutButton = new JButton("Sign Out");
+        
+        infoButton.addActionListener(e -> displayPlayerStats(player));
+        signOutButton.addActionListener(e -> signOut());
+        
+        optionsPanel.add(infoButton);
+        optionsPanel.add(signOutButton);
+    }
+    
+    // display game messages
+    public void displayMessage(String message) {
+        gameLog.append(message + "\n");
     }
     
     // operations done in SaveLoadController, but UI done here
@@ -129,8 +148,31 @@ public class GameView extends JFrame {
         this.dispose();
     }
     
+    private void interact(String cell) {
+        String currentCell = cell;
+        switch (currentCell) {
+            case "S ":
+                // store handling
+                EncounterController.storeEncounter = true;
+                break;
+            case "E ":
+                // enemy handling
+                EncounterController.enemyEncounter = true;
+                break;
+            case "T ":
+                // treasure handling
+                EncounterController.treasureEncounter = true;
+                break;
+            case "B ":
+                // boss handling
+                EncounterController.bossEncounter = true;
+                break;
+        } 
+    }
+    
+    
     // displays the entire game state: map and player stats
-    public void displayGame(GameMap map, Player player, Map<String, Enemy> enemies) {
+    private void displayGame(GameMap map, Player player, Map<String, Enemy> enemies) {
         displayMap(map, player, enemies);
         displayPlayerStats(player);
     }
