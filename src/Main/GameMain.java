@@ -1,4 +1,4 @@
-package rpg_ense600_project2;
+package Main;
 
 /**
  *
