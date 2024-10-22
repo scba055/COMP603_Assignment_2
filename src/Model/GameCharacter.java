@@ -26,6 +26,15 @@ public abstract class GameCharacter {
         setCol(startCol);
     }
     
+    // keeps any movement done within the bounds of the game
+    public void move(int newRow, int newCol, GameMap map) {
+        if (newRow >= 0 && newRow < map.getMap().length && newCol >= 0
+                && newCol < map.getMap()[0].length) {
+            setRow(newRow);
+            setCol(newCol);
+        }
+    }
+    
     // feature that all characters share
     // should be useful to fix the original issue found in Project 1
     public boolean isAlive() {
