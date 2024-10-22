@@ -1,0 +1,22 @@
+Player_Stats
+Name: s
+Health: 50
+Level: 1
+Attack: 100
+Defense: 10
+Experience: 0
+Gold: 165
+Position: 2,5
+
+Player_Inventory
+Health Potion,2
+Rusty Sword,1
+Wooden Shield,1
+
+Map
+5,10
+.........E
+..........
+.....P....
+..........
+.....E..S.
