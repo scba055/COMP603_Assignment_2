@@ -33,7 +33,55 @@ public class GameView extends JFrame {
         mapDisplay.setEditable(false);
         add(new JScrollPane(mapDisplay), BorderLayout.CENTER);
         
-        // adding movement buttons for user
+        // adding movement and interactions buttons for user
+        JPanel controlPanel = new JPanel(new GridLayout(2,3));
+        JButton upButton = new JButton("△");
+        JButton rightButton = new JButton("▷");
+        JButton downButton = new JButton("▽");
+        JButton leftButton = new JButton("◁");
+        JButton interactButton = new JButton("◖"); // wanting to emulate a gameboy
+        JButton backButton = new JButton("◗");
+        // symbols from: https://www.alt-codes.net/
+        
+        // adding buttons to control panel
+        controlPanel.add(upButton);
+        controlPanel.add(leftButton);
+        controlPanel.add(interactButton);
+        controlPanel.add(backButton);
+        controlPanel.add(rightButton);
+        controlPanel.add(downButton);
+        
+        add(controlPanel, BorderLayout.SOUTH);
+        
+        // implementing Player info and sign out buttons
+        JPanel optionsPanel = new JPanel(new GridLayout(1,2));
+        JButton infoButton = new JButton("Info");
+        JButton signOutButton = new JButton("Sign Out");
+        // adding buttons to options panel
+        optionsPanel.add(infoButton);
+        optionsPanel.add(signOutButton);
+        add(optionsPanel, BorderLayout.NORTH);
+        
+        // setting up the event listeners for the buttons
+        upButton.addActionListener(e -> player.movePlayer('w', map));
+        leftButton.addActionListener(e -> player.movePlayer('a', map));
+        downButton.addActionListener(e -> player.movePlayer('s', map));
+        rightButton.addActionListener(e -> player.movePlayer('d', map));
+        interactButton.addActionListener(e -> interact());
+        infoButton.addActionListener(e -> displayPlayerStats(player));
+        signOutButton.addActionListener(e -> signOut());
+        
+        // wanting to make the default close window ops to ask the user to save
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                handleCloseOperation();
+            }
+        });
+        
+        // display initial game state
+        displayMap(map, player, enemies);
+        setVisible(true);
     }
     
     // displays the entire game state: map and player stats
