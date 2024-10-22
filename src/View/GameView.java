@@ -105,6 +105,30 @@ public class GameView extends JFrame {
         // cancel option just brings the user back to the game
     }
     
+    // implementing saving the game before signing out, brings user back to main menu
+    private void signOut() {
+        int choice = JOptionPane.showConfirmDialog(this,
+                "Do you want to save your progress before returning to the main menu?",
+                "Sign Out", JOptionPane.YES_NO_CANCEL_OPTION);
+        
+        if (choice == JOptionPane.YES_OPTION) {
+            boolean isSaved = SaveLoadController.saveGame(player, map);
+            if (isSaved) {
+                JOptionPane.showMessageDialog(this, "Game saved successfully.");
+                returnToMainMenu(); // goes to main menu GUI
+            }
+        } else if (choice == JOptionPane.NO_OPTION) {
+            returnToMainMenu();
+        }
+        // cancel does nothing, the game continues
+    }
+    
+    private void returnToMainMenu() {
+        // gets rid of the existing GUI to bring the user back to first GUI
+        // i.e. Main Menu
+        this.dispose();
+    }
+    
     // displays the entire game state: map and player stats
     public void displayGame(GameMap map, Player player, Map<String, Enemy> enemies) {
         displayMap(map, player, enemies);
