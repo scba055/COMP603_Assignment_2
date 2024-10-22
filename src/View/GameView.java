@@ -10,6 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Map;
+import Controller.SaveLoadController;
 
 // includes old code and code that would create the UI for the game
 public class GameView extends JFrame {
@@ -82,6 +83,26 @@ public class GameView extends JFrame {
         // display initial game state
         displayMap(map, player, enemies);
         setVisible(true);
+    }
+    
+    // operations done in SaveLoadController, but UI done here
+    private void handleCloseOperation() {
+        int choice = JOptionPane.showConfirmDialog(this, 
+                "Do you want to save your progress before exiting?", "Exit Game",
+                JOptionPane.YES_NO_CANCEL_OPTION);
+        
+        if (choice == JOptionPane.YES_OPTION) {
+            boolean isSaved = SaveLoadController.saveGame(player, map);
+            if (isSaved) {
+                System.exit(0); // if successful, then exit
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to save", "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        } else if (choice == JOptionPane.NO_OPTION) {
+            System.exit(0); // exit without saving
+        }
+        // cancel option just brings the user back to the game
     }
     
     // displays the entire game state: map and player stats
