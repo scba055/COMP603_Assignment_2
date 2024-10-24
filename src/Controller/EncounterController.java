@@ -27,7 +27,7 @@ public class EncounterController {
     
     }
     
-    public void enemyEncounter() {
+    public void enemyEncounter(Enemy enemy) {
         
     }
     
@@ -38,4 +38,6 @@ public class EncounterController {
     public void treasureEncounter() {
     
     }
+    
+    
 }

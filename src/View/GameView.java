@@ -20,17 +20,21 @@ public class GameView extends JFrame {
     private final JTextArea mapDisplay;
     private final Controller.PlayerController pc;
     private final Controller.EncounterController ec;
+    private final Controller.GameController gc;
     //private final JTextArea playerStats;
     private JPanel controlPanel;
     private JPanel optionsPanel;
     private JTextArea gameLog;
     
-    public GameView(Player player, GameMap map, Map<String, Enemy> enemies, Controller.PlayerController pc, Controller.EncounterController ec) {
+    public GameView(Player player, GameMap map, Map<String, Enemy> enemies, 
+            Controller.PlayerController pc, Controller.EncounterController ec,
+            Controller.GameController gc) {
         this.player = player;
         this.map = map;
         this.enemies = enemies;
         this.pc = pc;
         this.ec = ec;
+        this.gc = gc;
         
         // setting up the UI
         setTitle("YWJ5422's World");
@@ -79,7 +83,7 @@ public class GameView extends JFrame {
         leftButton.addActionListener(e -> pc.movePlayer('a', map, player));
         downButton.addActionListener(e -> pc.movePlayer('s', map, player));
         rightButton.addActionListener(e -> pc.movePlayer('d', map, player));
-        interactButton.addActionListener(e -> interact(pc.getInteraction()));
+        interactButton.addActionListener(e -> gc.interact(pc.getInteraction()));
         
         // adding buttons to control panel
         controlPanel.add(upButton);
@@ -169,6 +173,7 @@ public class GameView extends JFrame {
         displayMap(map, player, enemies);
         displayPlayerStats(player);
     }
+    
     
     // displays the map, showing 'P' as player's position on map
     private void displayMap(GameMap map, Player player, Map<String, Enemy> enemies) {
