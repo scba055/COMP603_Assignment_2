@@ -10,8 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Map;
-import Controller.SaveLoadController;
-import Controller.EncounterController;
+import Controller.*;
 
 // includes old code and code that would create the UI for the game
 public class GameView extends JFrame {
@@ -19,15 +18,17 @@ public class GameView extends JFrame {
     private final GameMap map;
     private final Map<String, Enemy> enemies;
     private final JTextArea mapDisplay;
+    private final Controller.PlayerController pc;
     //private final JTextArea playerStats;
     private JPanel controlPanel;
     private JPanel optionsPanel;
     private JTextArea gameLog;
     
-    public GameView(Player player, GameMap map, Map<String, Enemy> enemies) {
+    public GameView(Player player, GameMap map, Map<String, Enemy> enemies, Controller.PlayerController pc) {
         this.player = player;
         this.map = map;
         this.enemies = enemies;
+        this.pc = pc;
         
         // setting up the UI
         setTitle("YWJ5422's World");
@@ -72,11 +73,11 @@ public class GameView extends JFrame {
         JButton backButton = new JButton("◗");
         // symbols from: https://www.alt-codes.net/
         
-        upButton.addActionListener(e -> player.movePlayer('w', map));
-        leftButton.addActionListener(e -> player.movePlayer('a', map));
-        downButton.addActionListener(e -> player.movePlayer('s', map));
-        rightButton.addActionListener(e -> player.movePlayer('d', map));
-        interactButton.addActionListener(e -> interact(player.getInteraction()));
+        upButton.addActionListener(e -> pc.movePlayer('w', map, player));
+        leftButton.addActionListener(e -> pc.movePlayer('a', map, player));
+        downButton.addActionListener(e -> pc.movePlayer('s', map, player));
+        rightButton.addActionListener(e -> pc.movePlayer('d', map, player));
+        interactButton.addActionListener(e -> interact(pc.getInteraction()));
         
         // adding buttons to control panel
         controlPanel.add(upButton);
@@ -146,6 +147,7 @@ public class GameView extends JFrame {
         // gets rid of the existing GUI to bring the user back to first GUI
         // i.e. Main Menu
         this.dispose();
+        new MainMenuView(); // initialises Main Menu
     }
     
     private void interact(String cell) {
@@ -168,6 +170,13 @@ public class GameView extends JFrame {
                 EncounterController.bossEncounter = true;
                 break;
         } 
+    }
+    
+    // this will handle the attack/guard/heal and run options for the user
+    private int showEncounterOptions(String message, String[] options) {
+        return JOptionPane.showOptionDialog(this, message, "Encounter",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                null, options, options[0]);
     }
     
     
