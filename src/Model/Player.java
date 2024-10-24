@@ -13,6 +13,7 @@ public class Player extends GameCharacter implements Serializable {
     // player-specific stats
     private int experience;
     private int gold;
+    private String username, password;
     private Map<String, Integer> inventory = new HashMap<>();
     
     // constructor for new players
@@ -22,6 +23,7 @@ public class Player extends GameCharacter implements Serializable {
         setEXP(0);
         setGold(0);
         setInventory(null);
+        
     }
     
     // player-specific getters and setters
@@ -38,4 +40,10 @@ public class Player extends GameCharacter implements Serializable {
     // inventory size
     public Map<String, Integer> getInventory() { return inventory; }
     public void setInventory(Map<String, Integer> inventory) { this.inventory = inventory; }
+    
+    // login that is related to the character
+    public void setUsername(String user) {this.username = user; }
+    public String getUsername() { return username; }
+    public void setPassword(String pass) { this.password = pass; }
+    public String getPassword() { return password; }
 }
