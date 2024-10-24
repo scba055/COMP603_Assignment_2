@@ -1,7 +1,5 @@
 package Controller;
 
-import Model.GameMap;
-
 /**
  *
  * @author ywj5422
@@ -10,15 +8,32 @@ public class PlayerController {
     private String interaction;
     private Model.Player player;
     private int oldRow, oldCol;
+    private final Controller.GameController gc;
+    private final Model.GameMap map;
+    private final View.GameView gv;
     
     // gets the player's current row and col position
-    public PlayerController(Model.Player player){
+    public PlayerController(Model.Player player, Controller.GameController gc, 
+            Model.GameMap map, Model.Player user, View.GameView view){
         this.oldRow = player.getRow();
         this.oldCol = player.getCol();
+        this.gc = gc;
+        this.map = map;
+        this.player = user;
+        this.gv = view;
+    }
+    
+    private void processPlayerMovement(char move) {
+        if (movePlayer(move, map, player)) {
+            // checks if there is an encounter within the new row,col  
+            gc.interact(getInteraction());
+        } else {
+            gv.displayMessage("Invalid move. You cannot leave the world map.");
+        }
     }
     
     // class that allows the player to move positions in the map
-    public boolean movePlayer(char direction, GameMap map, Model.Player player) {
+    public boolean movePlayer(char direction, Model.GameMap map, Model.Player player) {
         int newRow = player.getRow();
         int newCol = player.getCol();
         boolean validMove= false;

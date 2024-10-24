@@ -19,16 +19,18 @@ public class GameView extends JFrame {
     private final Map<String, Enemy> enemies;
     private final JTextArea mapDisplay;
     private final Controller.PlayerController pc;
+    private final Controller.EncounterController ec;
     //private final JTextArea playerStats;
     private JPanel controlPanel;
     private JPanel optionsPanel;
     private JTextArea gameLog;
     
-    public GameView(Player player, GameMap map, Map<String, Enemy> enemies, Controller.PlayerController pc) {
+    public GameView(Player player, GameMap map, Map<String, Enemy> enemies, Controller.PlayerController pc, Controller.EncounterController ec) {
         this.player = player;
         this.map = map;
         this.enemies = enemies;
         this.pc = pc;
+        this.ec = ec;
         
         // setting up the UI
         setTitle("YWJ5422's World");
@@ -150,27 +152,9 @@ public class GameView extends JFrame {
         new MainMenuView(); // initialises Main Menu
     }
     
-    private void interact(String cell) {
-        String currentCell = cell;
-        switch (currentCell) {
-            case "S ":
-                // store handling
-                EncounterController.storeEncounter = true;
-                break;
-            case "E ":
-                // enemy handling
-                EncounterController.enemyEncounter = true;
-                break;
-            case "T ":
-                // treasure handling
-                EncounterController.treasureEncounter = true;
-                break;
-            case "B ":
-                // boss handling
-                EncounterController.bossEncounter = true;
-                break;
-        } 
-    }
+    
+    
+    
     
     // this will handle the attack/guard/heal and run options for the user
     private int showEncounterOptions(String message, String[] options) {
