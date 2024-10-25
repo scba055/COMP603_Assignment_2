@@ -17,7 +17,7 @@ import java.util.logging.Logger;
         
 public class Database {
     private Connection conn;
-    private String url = "jdbc:derby:db;create=true";  // URL of the DB host
+    private String url = "jdbc:derby:GameDB;create=true";  // URL of the DB host
     private String dbusername = "pdc";  // your DB username
     private String dbpassword = "pdc";  // your DB password
     private String username;
@@ -55,18 +55,18 @@ public class Database {
     private void createPlayerTable() {
         try (Statement pst = conn.createStatement()){
             String createPlayerTable = 
-                    "CREATE TABLE Player (" +
+                    "CREATE TABLE IF NOT EXISTS Player (" +
                     "id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY," +
-                    "username VARCHAR(50) UNIQUE NOT NULL," +
-                    "password VARCHAR(50) NOT NULL," +
-                    "name VARCHAR(50)," +
-                    "health INT," +
-                    "level INT," +
-                    "attack INT," +
-                    "defense INT," +
-                    "exp INT," +
-                    "gold INT," +
-                    "row INT," +
+                    "username VARCHAR(50) UNIQUE NOT NULL, " +
+                    "password VARCHAR(50) NOT NULL, " +
+                    "name VARCHAR(50), " +
+                    "health INT, " +
+                    "level INT, " +
+                    "attack INT, " +
+                    "defense INT, " +
+                    "exp INT, " +
+                    "gold INT, " +
+                    "row INT, " +
                     "col INT" +
                     ")";
             pst.executeUpdate(createPlayerTable);
@@ -80,7 +80,7 @@ public class Database {
     private void createInventoryTable() {
         try (Statement ist = conn.createStatement()){
             String createInventoryTable = 
-                    "CREATE TABLE Inventory (" +
+                    "CREATE TABLE IF NOT EXISTS Inventory (" +
                     "player_id INT," +
                     "item_name VARCHAR(50)," +
                     "quantity INT," +
@@ -96,7 +96,7 @@ public class Database {
         String enemyTable = 
                 "CREATE TABLE Enemies (" +
                 "id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY," +
-                "name VARCHAR(50)" +
+                "name VARCHAR(50), " +
                 "level INT, health INT, attack INT, defense INT)";
         
         try (Statement est = conn.createStatement()) {
