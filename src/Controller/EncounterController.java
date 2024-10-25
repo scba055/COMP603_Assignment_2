@@ -16,7 +16,8 @@ public class EncounterController {
     private final Model.GameMap map;
     private final Model.Player user;
     
-    public EncounterController(Controller.PlayerController controller, View.GameView view, Model.GameMap map, Model.Player user) {
+    public EncounterController(Controller.PlayerController controller, 
+            View.GameView view, Model.GameMap map, Model.Player user) {
         this.pc = controller;
         this.gv = view;
         this.map = map;
@@ -24,7 +25,7 @@ public class EncounterController {
     }
     
     public void storeEncounter() {
-    
+        
     }
     
     public void enemyEncounter(Enemy enemy) {

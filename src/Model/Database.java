@@ -7,6 +7,7 @@ package Model;
 
 import java.sql.*;
 import View.GameView;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,7 +20,7 @@ public class Database {
     private String dbpassword = "pdc";  // your DB password
     private String username;
     private String password;
-    private View.GameView gv; 
+    private View.GameView gv;
     
     public Database() {
         connect();
@@ -67,7 +68,7 @@ public class Database {
             pst.executeUpdate(createPlayerTable);
             System.out.println("Player table has been created or already exists."); // for debugging
         } catch (SQLException e) {
-            System.out.println("Error creating player table: " + e.getMessage());
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
     }
     
@@ -83,7 +84,7 @@ public class Database {
                     ")";
             ist.executeUpdate(createInventoryTable);
         } catch (SQLException e) {
-            System.out.println("Error creating inventory table: " + e.getMessage());
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
     }
     
@@ -115,7 +116,7 @@ public class Database {
                     }
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
             }
         } else {
             // Username doesn't exist, so create a new user
@@ -125,7 +126,7 @@ public class Database {
                 statement.close();  // Close Statement
                 return true;  // New user successfully created
             } catch (SQLException e) {
-                e.printStackTrace();
+                Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
             }
         }
         return false;  // If anything fails, return false
@@ -144,7 +145,7 @@ public class Database {
             rs.close();  // Close ResultSet
             statement.close();  // Close Statement
         } catch (SQLException e) {
-            e.printStackTrace();
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
         return userExists;  // Return whether the user exists
     }
@@ -194,7 +195,7 @@ public class Database {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error saving player: " + e.getMessage());
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
     }
     
@@ -213,7 +214,64 @@ public class Database {
             }
             ist.executeBatch();
         } catch (SQLException e) {
-            System.out.println("Error saving inventory: " + e.getMessage());
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
     }
+    
+    public Player loadPlayer(String username) {
+        String selectPlayer = "SELECT * FROM Player WHERE username = ?";
+        Player player = null;
+        
+        try (PreparedStatement pst = conn.prepareStatement(selectPlayer)) {
+            pst.setString(1, username);
+            ResultSet rs = pst.executeQuery();
+            
+            if (rs.next()) {
+                // create Player object with data gathered from databse
+                player = new Player(
+                        rs.getString("name"),
+                        rs.getInt("health"),
+                        rs.getInt("level"),
+                        rs.getInt("attack"),
+                        rs.getInt("defense"),
+                        rs.getInt("row"),
+                        rs.getInt("col"));
+                player.setUsername(rs.getString("username"));
+                player.setPassword(rs.getString("password"));
+                player.setEXP(rs.getInt("exp"));
+                player.setGold(rs.getInt("gold"));
+                
+                player.setInventory(loadInventory(rs.getInt("id")));
+                Logger.getLogger(Database.class.getName()).log(Level.INFO, "Player {0} loaded successfully.", username);
+            }
+        } catch (SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+        } 
+        
+        return player;
+    }
+    
+    // helper function for loadPlayer, inserts the inventory that the player has
+    // under their name
+    private Map<String,Integer> loadInventory(int playerId) {
+        String selectInv = "SELECT * FROM Inventory WHERE player_id = ?";
+        Map<String, Integer> inventory = new HashMap<>();
+        
+        try (PreparedStatement ist = conn.prepareStatement(selectInv)) {
+            ist.setInt(1, playerId);
+            ResultSet rs = ist.executeQuery();
+            
+            while (rs.next()) {
+                String itemName = rs.getString("item_name");
+                int quantity = rs.getInt("quantity");
+                inventory.put(itemName, quantity);
+            }
+            Logger.getLogger(Database.class.getName()).log(Level.INFO, "Inventory loaded for player {0}", playerId);
+        } catch (SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+        }
+        return inventory;
+    }
+    
+    
 }
