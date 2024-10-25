@@ -84,7 +84,7 @@ public class Database {
                     "player_id INT," +
                     "item_name VARCHAR(50)," +
                     "quantity INT," +
-                    "FOREIGN KEY (player_id) REFERENCES Player(id) DELETE ON CASCADE" +
+                    "FOREIGN KEY (player_id) REFERENCES Player(id) ON DELETE CASCADE" +
                     ")";
             ist.executeUpdate(createInventoryTable);
         } catch (SQLException e) {
@@ -96,7 +96,7 @@ public class Database {
         String enemyTable = 
                 "CREATE TABLE Enemies (" +
                 "id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY," +
-                "name VARCAHR(50)" +
+                "name VARCHAR(50)" +
                 "level INT, health INT, attack INT, defense INT)";
         
         try (Statement est = conn.createStatement()) {
@@ -235,7 +235,7 @@ public class Database {
     public boolean savePlayer(Player player) {
         boolean isSaved = false;
         String insertPlayerSQL = 
-                "MERGE INTO Player AS P" +
+                "MERGE INTO Player AS P " +
                 "USING (VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)) AS V (" +
                 "username, password, name, health, level, attack," +
                 "defense, exp, gold, row, col" +
@@ -362,7 +362,7 @@ public class Database {
         String deleteOldMapData = "DELETE FROM MapCells";
         String deleteOldMapDimensions = "DELETE FROM MapInfo";
         String insertNewMap = "INSERT INTO MapCells (row, col, value"
-                + "VALUE (?, ?, ?)";
+                + "VALUES (?, ?, ?)";
         String insertNewMapDimensions = "INSERT INTO MapInfo (rows, cols)"
                 + "VALUES (?,?)";
         
