@@ -7,6 +7,9 @@ package Model;
 
 import java.sql.*;
 import View.GameView;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -21,6 +24,7 @@ public class Database {
     private String username;
     private String password;
     private View.GameView gv;
+    private Map<String, Enemy> enemies = new HashMap<>();
     
     public Database() {
         connect();
@@ -45,6 +49,7 @@ public class Database {
     private void createTables() {
         createPlayerTable();
         createInventoryTable();
+        createEnemiesTable();
     }
     
     // adds player stats into the database
@@ -86,6 +91,83 @@ public class Database {
         } catch (SQLException e) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
+    }
+    
+    private void createEnemiesTable() {
+        String enemyTable = 
+                "CREATE TABLE Enemies (" +
+                "id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY," +
+                "name VARCAHR(50)" +
+                "level INT, health INT, attack INT, defense INT)";
+        
+        try (Statement est = conn.createStatement()) {
+            est.executeUpdate(enemyTable);
+            System.out.println("Enemies table created.");
+        } catch (SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+        }
+    }
+    
+    // using old code from project 1 to allow the database save the entries in 
+    // the txt file
+    public void importEnemies(String file) {
+        try {
+            FileReader fr = new FileReader(file);
+            BufferedReader br = new BufferedReader(fr);
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] splitParts = line.split(", ");
+                if (splitParts.length == 5) {
+                    String name = splitParts[0];
+                    int health = Integer.parseInt(splitParts[1]);
+                    int level = Integer.parseInt(splitParts[2]);
+                    int attack = Integer.parseInt(splitParts[3]);
+                    int defense = Integer.parseInt(splitParts[4]);
+                    enemyToDatabase(name, health, level, attack, defense);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + file);
+        }
+    }
+    
+    private void enemyToDatabase(String name, int lvl, int health, int attack,
+            int defense) {
+        String insertEnemy = 
+                "INSERT INTO Enemies (name, health, level, attack, defense)" +
+                "VALUES (?, ?, ?, ?, ?)";
+        
+        try (PreparedStatement epst = conn.prepareStatement(insertEnemy)) {
+            epst.setString(1, name);
+            epst.setInt(2, lvl);
+            epst.setInt(3, health);
+            epst.setInt(4, attack);
+            epst.setInt(5, defense);
+            epst.executeUpdate();
+        } catch (SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+        }
+    }
+    
+    // loads enemies from the database
+    public Map<String, Enemy> loadEnemies() {
+        String enemySelect = "SELECT * FROM Enemies";
+        try (Statement est = conn.createStatement(); 
+             ResultSet rs = est.executeQuery(enemySelect)) {
+            while (rs.next()) {
+                String name = rs.getString("name");
+                int level = rs.getInt("level");
+                int health = rs.getInt("health");
+                int attack = rs.getInt("attack");
+                int defense = rs.getInt("defense");
+                
+                Enemy enemy = new Enemy(name, level, health, attack, defense);
+                enemies.put(name,enemy);
+            }
+        } catch (SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+        }
+        return enemies;
     }
     
     // from tutorial 9_3 without the score mechanics
@@ -273,5 +355,11 @@ public class Database {
         return inventory;
     }
     
+    private void saveMap(GameMap map) {
     
+    }
+    
+    public GameMap loadMap() {
+    
+    }
 }
