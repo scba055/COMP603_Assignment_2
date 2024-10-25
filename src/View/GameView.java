@@ -21,14 +21,27 @@ public class GameView extends JFrame {
     private final Controller.PlayerController pc;
     private final Controller.EncounterController ec;
     private final Controller.GameController gc;
-    //private final JTextArea playerStats;
+    private boolean enemyButtonFlag = false;
+    private boolean storeButtonFlag = false;
+    // private final JTextArea playerStats;
     private JPanel controlPanel;
     private JPanel optionsPanel;
     private JTextArea gameLog;
     
+    // custom buttons for encounters (enemy and store)
+    private JButton attackButton;
+    private JButton healButton;
+    private JButton guardButton;
+    private JButton runButton;
+    
+    private JButton option1;
+    private JButton option2;
+    private JButton option3;
+    private JButton option4;
+    
     public GameView(Player player, GameMap map, Map<String, Enemy> enemies, 
             Controller.PlayerController pc, Controller.EncounterController ec,
-            Controller.GameController gc) {
+            Controller.GameController gc){
         this.player = player;
         this.map = map;
         this.enemies = enemies;
@@ -75,23 +88,71 @@ public class GameView extends JFrame {
         JButton rightButton = new JButton("▷");
         JButton downButton = new JButton("▽");
         JButton leftButton = new JButton("◁");
-        JButton interactButton = new JButton("◖"); // wanting to emulate a gameboy
-        JButton backButton = new JButton("◗");
+        JButton interactButton = new JButton("●"); // wanting to emulate a gameboy
         // symbols from: https://www.alt-codes.net/
         
+        // Enemy encounter buttons
+        attackButton = new JButton("Attack");
+        healButton = new JButton("Heal");
+        guardButton = new JButton("Guard");
+        runButton = new JButton("Run");
+        toggleEnemyEncounterButtons(enemyButtonFlag);
+        
+        // Store encounter buttons
+        option1 = new JButton("1");
+        option2 = new JButton("2");
+        option3 = new JButton("3");
+        option4 = new JButton("4");
+        toggleStoreEncounterButtons(storeButtonFlag);
+         
+        // navigation action listeners
         upButton.addActionListener(e -> pc.movePlayer('w', map, player));
         leftButton.addActionListener(e -> pc.movePlayer('a', map, player));
         downButton.addActionListener(e -> pc.movePlayer('s', map, player));
         rightButton.addActionListener(e -> pc.movePlayer('d', map, player));
         interactButton.addActionListener(e -> gc.interact(pc.getInteraction()));
         
+        // enemy encounter action listeners
+        attackButton.addActionListener(e -> ec.handleAttack());
+        healButton.addActionListener(e -> ec.handleHeal());
+        guardButton.addActionListener(e -> ec.handleGuard());
+        runButton.addActionListener(e -> ec.handleRun());
+        
+        // store encounter action listeners
+        option1.addActionListener(e -> ec.handleOption1());
+        option2.addActionListener(e -> ec.handleOption2());
+        option3.addActionListener(e -> ec.handleOption3());
+        option4.addActionListener(e -> ec.handleOption4());
+        
         // adding buttons to control panel
         controlPanel.add(upButton);
         controlPanel.add(leftButton);
         controlPanel.add(interactButton);
-        controlPanel.add(backButton);
         controlPanel.add(rightButton);
         controlPanel.add(downButton);
+        controlPanel.add(attackButton);
+        controlPanel.add(healButton);
+        controlPanel.add(guardButton);
+        controlPanel.add(runButton);
+        controlPanel.add(option1);
+        controlPanel.add(option2);
+        controlPanel.add(option3);
+        controlPanel.add(option4);
+        
+        if (enemyButtonFlag == true || storeButtonFlag == true) {
+            upButton.setVisible(false);
+            leftButton.setVisible(false);
+            rightButton.setVisible(false);
+            downButton.setVisible(false);
+            interactButton.setVisible(false);
+            if (enemyButtonFlag == true) {
+                storeButtonFlag = false;
+                toggleStoreEncounterButtons(storeButtonFlag);
+            } else if (storeButtonFlag == true) {
+                enemyButtonFlag = false;
+                toggleEnemyEncounterButtons(enemyButtonFlag);
+            }
+        }
     }
     
     // adding buttons for the options menu
@@ -104,6 +165,20 @@ public class GameView extends JFrame {
         
         optionsPanel.add(infoButton);
         optionsPanel.add(signOutButton);
+    }
+    
+    public void toggleEnemyEncounterButtons(boolean isShowing) {
+        attackButton.setVisible(isShowing);
+        healButton.setVisible(isShowing);
+        guardButton.setVisible(isShowing);
+        runButton.setVisible(isShowing);
+    }
+    
+    public void toggleStoreEncounterButtons(boolean isShowing) {
+        option1.setVisible(isShowing);
+        option2.setVisible(isShowing);
+        option3.setVisible(isShowing);
+        option4.setVisible(isShowing);
     }
     
     // display game messages
@@ -156,9 +231,11 @@ public class GameView extends JFrame {
         new MainMenuView(); // initialises Main Menu
     }
     
+    public void returnToGameMap() {
     
+    }
     
-    
+
     
     // this will handle the attack/guard/heal and run options for the user
     private int showEncounterOptions(String message, String[] options) {
@@ -218,5 +295,6 @@ public class GameView extends JFrame {
         
         JOptionPane.showMessageDialog(null, playerStats.toString(), "Player's Stats", JOptionPane.INFORMATION_MESSAGE);
     }
+    
     
 }
