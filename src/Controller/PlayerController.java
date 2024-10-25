@@ -4,23 +4,24 @@ package Controller;
  *
  * @author ywj5422
  */
+
+import Model.*;
+import Controller.*;
+import View.GameView;
+
 public class PlayerController {
     private String interaction;
     private Model.Player player;
     private int oldRow, oldCol;
-    private final Controller.GameController gc;
-    private final Model.GameMap map;
-    private final View.GameView gv;
+    private GameController gc;
+    private GameMap map;
+    private View.GameView gv;
     
     // gets the player's current row and col position
-    public PlayerController(Model.Player player, Controller.GameController gc, 
-            Model.GameMap map, Model.Player user, View.GameView view){
+    public PlayerController(Player player){
+        this.player = player;
         this.oldRow = player.getRow();
         this.oldCol = player.getCol();
-        this.gc = gc;
-        this.map = map;
-        this.player = user;
-        this.gv = view;
     }
     
     private void processPlayerMovement(char move) {

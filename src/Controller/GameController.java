@@ -26,10 +26,9 @@ public class GameController {
     private Controller.EncounterController ec;
     private Controller.PlayerController pc;
     
-    public GameController(Controller.EncounterController ec, Controller.PlayerController pc) {
+    public GameController(EncounterController ec) {
         this.rand = new Random();
         this.enemies = Enemy.loadEnemies();
-        this.pc = pc;
         this.ec = ec;
     }
     

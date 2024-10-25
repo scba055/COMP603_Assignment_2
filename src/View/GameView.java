@@ -14,6 +14,7 @@ import Controller.*;
 
 // includes old code and code that would create the UI for the game
 public class GameView extends JFrame {
+    private DatabaseController dbCon;
     private final Player player;
     private final GameMap map;
     private final Map<String, Enemy> enemies;
@@ -40,6 +41,9 @@ public class GameView extends JFrame {
     private JButton option3;
     private JButton option4;
     
+    // custom area for enemy encounters
+    private JTextArea enemyStatsArea;
+    
     public GameView(Player player, GameMap map, Map<String, Enemy> enemies, 
             Controller.PlayerController pc, Controller.EncounterController ec,
             Controller.GameController gc, Controller.SaveLoadController slc){
@@ -61,6 +65,10 @@ public class GameView extends JFrame {
         gameLog = new JTextArea();
         gameLog.setEditable(false);
         JPanel optionsPanel = new JPanel(new GridLayout(1,2));
+        
+        enemyStatsArea = new JTextArea();
+        enemyStatsArea.setEditable(false);
+        enemyStatsArea.setVisible(false); // should be hidden by default
         
         addControlButtons();
         addOptionsButtons();
@@ -233,7 +241,7 @@ public class GameView extends JFrame {
         // gets rid of the existing GUI to bring the user back to first GUI
         // i.e. Main Menu
         this.dispose();
-        new MainMenuView(); // initialises Main Menu
+        new MainMenuView(dbCon); // initialises Main Menu
     }
     
     public void returnToGameMap() {
@@ -249,13 +257,27 @@ public class GameView extends JFrame {
                 null, options, options[0]);
     }
     
-    
-    // displays the entire game state: map and player stats
-    private void displayGame(GameMap map, Player player, Map<String, Enemy> enemies) {
-        displayMap(map, player, enemies);
-        displayPlayerStats(player);
+    // includes the information necessary to know within a fight against an enemy
+    public void updateEnemyStats(Enemy enemy) {
+        enemyStatsArea.setVisible(true);
+        // should only show the relevant stats for a player to see
+        StringBuilder stats = new StringBuilder();
+        stats.append(enemy.getName()).append("\n")
+                .append("Lvl: ").append(enemy.getLevel())
+                .append("Health: ").append(enemy.getHealth());
+        enemyStatsArea.setText(stats.toString());
     }
     
+    // similar to the code above but for the boss
+    public void updateBossStats(Boss boss) {
+        enemyStatsArea.setVisible(true);
+        // should only show the relevant stats for a player to see
+        StringBuilder stats = new StringBuilder();
+        stats.append(boss.getName()).append("\n")
+                .append("Lvl: ").append(boss.getLevel())
+                .append("Health: ").append(boss.getHealth());
+        enemyStatsArea.setText(stats.toString());
+    }
     
     // displays the map, showing 'P' as player's position on map
     private void displayMap(GameMap map, Player player, Map<String, Enemy> enemies) {

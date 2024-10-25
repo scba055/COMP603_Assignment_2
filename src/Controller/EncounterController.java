@@ -6,26 +6,27 @@ package Controller;
  */
 
 import Model.*;
+import Controller.*;
+import View.GameView;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
 // handles the encounter logic that the player will have
 public class EncounterController {
-    private final Controller.PlayerController pc;
-    private final View.GameView gv;
-    private final Model.GameMap map;
-    private final Model.Player player;
+    private PlayerController pc;
+    private View.GameView gv;
+    private final GameMap map;
+    private final Player player;
     private final Map<String, Integer> inventory;
     private final Random rand = new Random();
     
     private Enemy currentEnemy; // tracks the enemy within a singular encounter
     private Boss malenia;
     
-    public EncounterController(Controller.PlayerController controller, 
-            View.GameView view, Model.GameMap map, Model.Player user) {
+    public EncounterController(PlayerController controller, GameMap map,
+            Player user) {
         this.pc = controller;
-        this.gv = view;
         this.map = map;
         this.player = user;
         this.inventory = new HashMap<>();
@@ -65,8 +66,7 @@ public class EncounterController {
     
     private void updateEnemyStats() {
         if (currentEnemy != null) {
-            gv.updateEnemyStats(currentEnemy.getName(), currentEnemy.getLevel(),
-                    currentEnemy.getHealth());
+            gv.updateEnemyStats(currentEnemy);
         }
         enemyHealthStatusCheck();
     }
@@ -114,7 +114,7 @@ public class EncounterController {
     }
     
     private void updateBossStats() {
-        gv.updateBossStats(malenia.getName(), malenia.getLevel(), malenia.getHealth());
+        gv.updateBossStats(malenia);
         bossHealthStatusCheck();
     }
     

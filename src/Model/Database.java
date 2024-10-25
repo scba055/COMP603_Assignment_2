@@ -215,7 +215,7 @@ public class Database {
     
     // from tutorial 9_3 without the score mechanics
     // Method to check if a username exists in the database without logging in
-    public boolean checkName(String username) {
+    private boolean checkName(String username) {
         boolean userExists = false;
         try {
             Statement statement = conn.createStatement();
