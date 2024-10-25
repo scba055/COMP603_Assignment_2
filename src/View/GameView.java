@@ -21,6 +21,7 @@ public class GameView extends JFrame {
     private final Controller.PlayerController pc;
     private final Controller.EncounterController ec;
     private final Controller.GameController gc;
+    private final Controller.SaveLoadController slc;
     private boolean enemyButtonFlag = false;
     private boolean storeButtonFlag = false;
     // private final JTextArea playerStats;
@@ -41,13 +42,14 @@ public class GameView extends JFrame {
     
     public GameView(Player player, GameMap map, Map<String, Enemy> enemies, 
             Controller.PlayerController pc, Controller.EncounterController ec,
-            Controller.GameController gc){
+            Controller.GameController gc, Controller.SaveLoadController slc){
         this.player = player;
         this.map = map;
         this.enemies = enemies;
         this.pc = pc;
         this.ec = ec;
         this.gc = gc;
+        this.slc = slc;
         
         // setting up the UI
         setTitle("YWJ5422's World");
@@ -157,7 +159,7 @@ public class GameView extends JFrame {
     
     // adding buttons for the options menu
     private void addOptionsButtons() {
-        JButton infoButton = new JButton("Info");
+        JButton infoButton = new JButton("Player Info");
         JButton signOutButton = new JButton("Sign Out");
         
         infoButton.addActionListener(e -> displayPlayerStats(player));
@@ -193,7 +195,7 @@ public class GameView extends JFrame {
                 JOptionPane.YES_NO_CANCEL_OPTION);
         
         if (choice == JOptionPane.YES_OPTION) {
-            boolean isSaved = SaveLoadController.saveGame(player, map);
+            boolean isSaved = slc.saveGame(player, map);
             if (isSaved) {
                 System.exit(0); // if successful, then exit
             } else {
@@ -213,10 +215,13 @@ public class GameView extends JFrame {
                 "Sign Out", JOptionPane.YES_NO_CANCEL_OPTION);
         
         if (choice == JOptionPane.YES_OPTION) {
-            boolean isSaved = SaveLoadController.saveGame(player, map);
+            boolean isSaved = slc.saveGame(player, map);
             if (isSaved) {
                 JOptionPane.showMessageDialog(this, "Game saved successfully.");
                 returnToMainMenu(); // goes to main menu GUI
+            } else {
+                JOptionPane.showMessageDialog(this, "Save was unsuccessful.", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else if (choice == JOptionPane.NO_OPTION) {
             returnToMainMenu();
