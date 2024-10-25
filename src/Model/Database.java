@@ -7,6 +7,10 @@ package Model;
 
 import java.sql.*;
 import View.GameView;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
         
 public class Database {
     private Connection conn;
@@ -15,7 +19,7 @@ public class Database {
     private String dbpassword = "pdc";  // your DB password
     private String username;
     private String password;
-    //private View.GameView gv; commenting for now
+    private View.GameView gv; 
     
     public Database() {
         connect();
@@ -83,6 +87,68 @@ public class Database {
         }
     }
     
+    // from tutorial 9_3 without the score mechanics
+    // Login method to validate user credentials
+    public boolean login(String username, String password) {
+        this.username = username;
+        this.password = password;
+
+        // Check if the username exists in the database
+        if (checkName(username)) {
+            // Username exists, so check the password
+            try {
+                Statement statement = conn.createStatement();
+                ResultSet rs = statement.executeQuery("SELECT password, score FROM USERINFO WHERE userid='" + username + "'");
+                if (rs.next()) {
+                    String pass = rs.getString("password");
+                    // Validate the password
+                    if (password.equals(pass)) {
+                        gv.displayMessage("Welcome back " + username + "!");
+                        rs.close();  // Close ResultSet
+                        statement.close();  // Close Statement
+                        return true;  // Successful login
+                    } else {
+                        // Password is incorrect
+                        rs.close();
+                        statement.close();
+                        return false;  // Invalid password
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // Username doesn't exist, so create a new user
+            try {
+                Statement statement = conn.createStatement();
+                statement.executeUpdate("INSERT INTO USERINFO (userid, password, score) VALUES ('" + username + "', '" + password + "', 0)");
+                statement.close();  // Close Statement
+                return true;  // New user successfully created
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;  // If anything fails, return false
+    }
+    
+    // from tutorial 9_3 without the score mechanics
+    // Method to check if a username exists in the database without logging in
+    public boolean checkName(String username) {
+        boolean userExists = false;
+        try {
+            Statement statement = conn.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT userid FROM USERINFO WHERE userid='" + username + "'");
+            if (rs.next()) {
+                userExists = true;  // The user exists
+            }
+            rs.close();  // Close ResultSet
+            statement.close();  // Close Statement
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return userExists;  // Return whether the user exists
+    }
+    
     // saves player data into the database
     public void savePlayer(Player player) {
         String insertPlayerSQL = 
@@ -92,12 +158,12 @@ public class Database {
                 "defense, exp, gold, row, col" +
                 ")" +
                 "ON P.username = V.username" +
-                "WHEN MATCHED THEN" +
-                    "UPDATE SET" +
+                "WHEN MATCHED THEN" + // checks for a matching username
+                    "UPDATE SET" + // inserts the stats
                         "password = V.password, name = V.name, health = V.health,"
                         + "level = V.level, attack = V.attack, defense = V.defense"
                         + "exp = V.exp, gold = V.gold, row = V.row, col = V.col" +
-                "WHEN NOT MATCHED THEN"
+                "WHEN NOT MATCHED THEN" // when no matching username
                 + "INSERT (username, password, name, health, level, attack"
                 + "defense, exp, gold, row, col)"
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -105,7 +171,7 @@ public class Database {
         try (PreparedStatement newpst = conn.prepareStatement(insertPlayerSQL, 
                 Statement.RETURN_GENERATED_KEYS)) {
             newpst.setString(1, player.getUsername());
-            newpst.setString(2, PasswordUtils.hashPassword(player.getPassword()));
+            newpst.setString(2, player.getPassword());
             newpst.setString(3, player.getName());
             newpst.setInt(4, player.getHealth());
             newpst.setInt(5, player.getLevel());
@@ -117,9 +183,37 @@ public class Database {
             newpst.setInt(11, player.getCol());
             newpst.executeUpdate();
             
-            
+            // generates player ID (if new entry)
+            try (ResultSet keys = newpst.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int playerId = keys.getInt(1); // retrieve player's id
+                    System.out.println("Player saved with unique ID: " + playerId);
+                    
+                    // saves inventory to player
+                    saveInventory(playerId, player.getInventory());
+                }
+            }
         } catch (SQLException e) {
+            System.out.println("Error saving player: " + e.getMessage());
+        }
+    }
+    
+    // helper function for savePlayer, links inventory to the player via unique id
+    private void saveInventory(int id, Map<String, Integer> inventory) {
+        String insertInvSQL = 
+                "INSERT INTO Inventory (player_id, item_name, quantity)"
+                + "VALUES (?, ?, ?)";
         
+        try (PreparedStatement ist = conn.prepareStatement(insertInvSQL)){
+            for (Map.Entry<String, Integer> item : inventory.entrySet()) {
+                ist.setInt(1, id); // link to player unique id
+                ist.setString(2, item.getKey()); // Item name
+                ist.setInt(3, item.getValue()); // item quantity
+                ist.addBatch();
+            }
+            ist.executeBatch();
+        } catch (SQLException e) {
+            System.out.println("Error saving inventory: " + e.getMessage());
         }
     }
 }
