@@ -355,11 +355,79 @@ public class Database {
         return inventory;
     }
     
-    private void saveMap(GameMap map) {
-    
+    public void saveMap(GameMap map) {
+        String deleteOldMapData = "DELETE FROM MapCells";
+        String deleteOldMapDimensions = "DELETE FROM MapInfo";
+        String insertNewMap = "INSERT INTO MapCells (row, col, value"
+                + "VALUE (?, ?, ?)";
+        String insertNewMapDimensions = "INSERT INTO MapInfo (rows, cols)"
+                + "VALUES (?,?)";
+        
+        try (Statement deletest = conn.createStatement();
+                PreparedStatement cellst = conn.prepareStatement(insertNewMap);
+                PreparedStatement infost = conn.prepareStatement(insertNewMapDimensions)) {
+            // clear old map cells
+            deletest.executeUpdate(deleteOldMapData);
+            deletest.executeUpdate(deleteOldMapDimensions);
+            
+            // save new map dimensions
+            infost.setInt(1, map.getMap().length);
+            infost.setInt(2, map.getMap()[0].length);
+            infost.executeUpdate();
+            
+            // save new map
+            char[][] layout = map.getMap();
+            for (int i = 0; i < layout.length; i++) {
+                for (int j = 0; j < layout[i].length; j++) {
+                    cellst.setInt(1,j);
+                    cellst.setInt(2,j);
+                    cellst.setString(3, String.valueOf(layout[i][j]));
+                    cellst.addBatch();
+                }
+            }
+            
+            cellst.executeBatch();
+            System.out.println("Map successfully saved.");
+        } catch (SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+        }
     }
     
+    // inserts the necessary dimensions from the saved map in the database
+    // also inserts the value within an index in the map
+    // if there is no map due to new player, then make a new map
     public GameMap loadMap() {
-    
+        String selectMapInfo = "SELECT rows, cols FROM MapInfo";
+        String selectMapData = "Select row, col, value FROM MapCells";
+        char[][] layout = null;
+        
+        try(Statement st = conn.createStatement();
+                ResultSet infors = st.executeQuery(selectMapInfo)) {
+            
+            if (infors.next()) {
+                int rows = infors.getInt("rows");
+                int cols = infors.getInt("cols");
+                layout = new char[rows][cols];
+            }
+            
+            if (layout != null) {
+                try(PreparedStatement cellst = conn.prepareStatement(selectMapData)) {
+                    ResultSet cellrs = cellst.executeQuery();
+                    
+                    while(cellrs.next()) {
+                        int row = cellrs.getInt("row");
+                        int col = cellrs.getInt("col");
+                        char value = cellrs.getString("value").charAt(0);
+                        layout[row][col] = value;
+                    }
+                }
+            }
+            
+        } catch (SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+        }
+        // if game map is null, makes a new game map
+        return layout != null ? new GameMap(layout.length, layout[0].length,
+        layout) : new GameMap(5,10);
     }
 }

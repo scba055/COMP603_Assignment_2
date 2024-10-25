@@ -36,4 +36,14 @@ public class DatabaseController extends Model.Database {
         db.importEnemies("./resources/enemies.txt");
         return db.loadEnemies();
     }
+    
+    // loads the map
+    public GameMap loadMap() {
+        return db.loadMap();
+    }
+    
+    // saves the map
+    public void saveMap(GameMap map) {
+        db.saveMap(map);
+    }
 }

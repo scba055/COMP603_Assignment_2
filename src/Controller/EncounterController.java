@@ -20,6 +20,7 @@ public class EncounterController {
     private final Random rand = new Random();
     
     private Enemy currentEnemy; // tracks the enemy within a singular encounter
+    private Boss malenia;
     
     public EncounterController(Controller.PlayerController controller, 
             View.GameView view, Model.GameMap map, Model.Player user) {
@@ -67,12 +68,7 @@ public class EncounterController {
             gv.updateEnemyStats(currentEnemy.getName(), currentEnemy.getLevel(),
                     currentEnemy.getHealth());
         }
-        
-        if (!currentEnemy.isAlive()) {
-            handleVictory();
-        } else if (!player.isAlive()) {
-            handleDefeat();
-        }
+        enemyHealthStatusCheck();
     }
     
     public void handleAttack() {
@@ -98,12 +94,28 @@ public class EncounterController {
         
     }
     
+    private void handleFinalVictory() {
+        gv.displayMessage("You have slain a legend. Well done!");
+        gv.displayMessage("The End.");
+    }
+    
     private void handleDefeat() {
         gv.displayMessage("You have been slain.");
     }
     
     public void bossEncounter() {
+        gv.toggleEnemyEncounterButtons(true);
+        gv.displayMessage("I am Malenia, and I have never known defeat.");
+        malenia = new Boss("Malenia", 100, 30, 40, 50);
+        malenia.setRow(player.getRow());
+        malenia.setCol(player.getCol());
+        updateBossStats();
+        
+    }
     
+    private void updateBossStats() {
+        gv.updateBossStats(malenia.getName(), malenia.getLevel(), malenia.getHealth());
+        bossHealthStatusCheck();
     }
     
     public void treasureEncounter() {
@@ -149,5 +161,19 @@ public class EncounterController {
         }
     }
     
+    private void enemyHealthStatusCheck() {
+        if (!currentEnemy.isAlive()) {
+            handleVictory();
+        } else if (!player.isAlive()) {
+            handleDefeat();
+        }
+    }
     
+    private void bossHealthStatusCheck() {
+        if (!malenia.isAlive()) {
+            handleFinalVictory();
+        } else if (!player.isAlive()) {
+            handleDefeat();
+        }
+    }
 }
