@@ -6,7 +6,6 @@ package Model;
  */
 
 import java.sql.*;
-import View.GameView;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -233,7 +232,8 @@ public class Database {
     }
     
     // saves player data into the database
-    public void savePlayer(Player player) {
+    public boolean savePlayer(Player player) {
+        boolean isSaved = false;
         String insertPlayerSQL = 
                 "MERGE INTO Player AS P" +
                 "USING (VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)) AS V (" +
@@ -276,9 +276,11 @@ public class Database {
                     saveInventory(playerId, player.getInventory());
                 }
             }
+            isSaved = true;
         } catch (SQLException e) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
+        return isSaved;
     }
     
     // helper function for savePlayer, links inventory to the player via unique id
@@ -355,7 +357,8 @@ public class Database {
         return inventory;
     }
     
-    public void saveMap(GameMap map) {
+    public boolean saveMap(GameMap map) {
+        boolean isSaved = false;
         String deleteOldMapData = "DELETE FROM MapCells";
         String deleteOldMapDimensions = "DELETE FROM MapInfo";
         String insertNewMap = "INSERT INTO MapCells (row, col, value"
@@ -388,9 +391,11 @@ public class Database {
             
             cellst.executeBatch();
             System.out.println("Map successfully saved.");
+            isSaved = true;
         } catch (SQLException e) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
+        return isSaved;
     }
     
     // inserts the necessary dimensions from the saved map in the database
