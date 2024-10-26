@@ -17,12 +17,13 @@ import java.util.logging.Logger;
         
 public class Database {
     private Connection conn;
+    private static Database instance;
     private String url = "jdbc:derby:GameDB;create=true";  // DB URL
+    private String testUrl = "jdbc:derby:TestDB;create=true"; // test db
     private String dbusername = "pdc";  // from tutorials
     private String dbpassword = "pdc";  // from tutorials
     private String username;
     private String password;
-    private View.GameView gv;
     private Map<String, Enemy> enemies = new HashMap<>();
     
     public Database() {
@@ -30,11 +31,19 @@ public class Database {
         createTables();
     }
     
+    // applying Singleton principle
+    public static synchronized Database getInstance() {
+        if (instance == null) {
+            instance = new Database();
+        }
+        return instance;
+    }
+    
     // ensures that the database is connected properly
     private boolean connect() {
         boolean isConned = false;
         try {
-            conn = DriverManager.getConnection(url, dbusername, dbpassword);
+            conn = DriverManager.getConnection(testUrl, dbusername, dbpassword);
             System.out.println("Database successfully connected.");
             isConned = true;
         } catch (SQLException e) {
@@ -55,7 +64,7 @@ public class Database {
     private void createPlayerTable() {
         try (Statement pst = conn.createStatement()){
             String createPlayerTable = 
-                    "CREATE TABLE IF NOT EXISTS Player (" +
+                    "CREATE TABLE Player (" +
                     "id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY," +
                     "username VARCHAR(50) UNIQUE NOT NULL, " +
                     "password VARCHAR(50) NOT NULL, " +
@@ -72,7 +81,11 @@ public class Database {
             pst.executeUpdate(createPlayerTable);
             System.out.println("Player table has been created or already exists."); // for debugging
         } catch (SQLException e) {
-            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+            if (e.getSQLState().equals("X0Y32")) { // sees if an inventory table exists in the database
+                System.out.println("Player table already exists");
+            } else {
+                Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+            }
         }
     }
     
@@ -80,7 +93,7 @@ public class Database {
     private void createInventoryTable() {
         try (Statement ist = conn.createStatement()){
             String createInventoryTable = 
-                    "CREATE TABLE IF NOT EXISTS Inventory (" +
+                    "CREATE TABLE Inventory (" +
                     "player_id INT," +
                     "item_name VARCHAR(50)," +
                     "quantity INT," +
@@ -88,7 +101,11 @@ public class Database {
                     ")";
             ist.executeUpdate(createInventoryTable);
         } catch (SQLException e) {
-            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+            if (e.getSQLState().equals("X0Y32")) { // sees if an inventory table exists in the database
+                System.out.println("Inventory table already exists");
+            } else {
+                Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+            }
         }
     }
     
@@ -103,7 +120,11 @@ public class Database {
             est.executeUpdate(enemyTable);
             System.out.println("Enemies table created.");
         } catch (SQLException e) {
-            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+            if (e.getSQLState().equals("X0Y32")) { // sees if an inventory table exists in the database
+                System.out.println("Enemies table already exists");
+            } else {
+                Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
+            }
         }
     }
     
@@ -179,22 +200,15 @@ public class Database {
         // Check if the username exists in the database
         if (checkName(username)) {
             // Username exists, so check the password
-            try {
-                Statement statement = conn.createStatement();
-                ResultSet rs = statement.executeQuery("SELECT password" + username + "'");
+            String query = "SELECT password FROM Player WHERE username = ?";
+            try (PreparedStatement pst = conn.prepareStatement(query)) {
+                pst.setString(1, username);
+                ResultSet rs = pst.executeQuery();
                 if (rs.next()) {
                     String pass = rs.getString("password");
-                    // Validate the password
                     if (password.equals(pass)) {
-                        gv.displayMessage("Welcome back " + username + "!");
-                        rs.close();  // Close ResultSet
-                        statement.close();  // Close Statement
-                        matchFound = true;  // Successful login
-                    } else {
-                        // Password is incorrect
-                        rs.close();
-                        statement.close();
-                        matchFound = false;  // Invalid password
+                        System.out.println("Welcome back " + username + "!");
+                        matchFound = true;
                     }
                 }
             } catch (SQLException e) {
@@ -207,22 +221,15 @@ public class Database {
     // used in the signUp process;
     public Player newPlayer(String username, String password, String characterName) {
         Player player = null;
+        // inserts default values for new characters
         String insertPlayerSQL = 
             "INSERT INTO Player (username, password, name, health, level, attack, defense, exp, gold, row, col) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "VALUES (?, ?, ?, 100, 1, 10, 10, 0, 0, 0, 0)";
     
             try (PreparedStatement pst = conn.prepareStatement(insertPlayerSQL)) {
                 pst.setString(1, username);  // Username provided by the user
                 pst.setString(2, password);  // password provided by the user
                 pst.setString(3, characterName);  // Character name provided by the user
-                pst.setInt(4, 100);  // Default health value
-                pst.setInt(5, 1);  // Default level value
-                pst.setInt(6, 10);  // Default attack value
-                pst.setInt(7, 10);  // Default defense value
-                pst.setInt(8, 0);  // Default experience points
-                pst.setInt(9, 0);  // Default gold
-                pst.setInt(10, 0);  // Default row position
-                pst.setInt(11, 0);  // Default column position
 
                 pst.executeUpdate();  // Execute the SQL statement
                 System.out.println("New player created successfully.");
@@ -239,7 +246,7 @@ public class Database {
         boolean userExists = false;
         try {
             Statement statement = conn.createStatement();
-            ResultSet rs = statement.executeQuery("SELECT userid FROM USERINFO WHERE userid='" + username + "'");
+            ResultSet rs = statement.executeQuery("SELECT username FROM Player WHERE username='" + username + "'");
             if (rs.next()) {
                 userExists = true;  // The user exists
             }
@@ -381,7 +388,7 @@ public class Database {
         boolean isSaved = false;
         String deleteOldMapData = "DELETE FROM MapCells";
         String deleteOldMapDimensions = "DELETE FROM MapInfo";
-        String insertNewMap = "INSERT INTO MapCells (row, col, value"
+        String insertNewMap = "INSERT INTO MapCells (row, col, value)"
                 + "VALUES (?, ?, ?)";
         String insertNewMapDimensions = "INSERT INTO MapInfo (rows, cols)"
                 + "VALUES (?,?)";

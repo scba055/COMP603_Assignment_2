@@ -1,7 +1,7 @@
 ----------------------------------------------------------------
-Sat Oct 26 02:43:40 NZDT 2024:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0192-c3eb-2250-00000f300000 
-on database directory C:\Users\cabal\OneDrive\Documents\University\2024\COMP603 Software Construction\RPG_ENSE600_Project2\GameDB with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@18ef96 
+Sat Oct 26 20:32:10 NZDT 2024:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0192-c7bd-60e3-00000ed00000 
+on database directory C:\Users\cabal\OneDrive\Documents\University\2024\COMP603 Software Construction\RPG_ENSE600_Project2\TestDB with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@30946e09 
 Loaded from file:/C:/Users/cabal/OneDrive/Documents/University/2024/COMP603%20Software%20Construction/RPG_ENSE600_Project2/lib/derby.jar
 java.vendor=Oracle Corporation
 java.runtime.version=11.0.22+9-LTS-219

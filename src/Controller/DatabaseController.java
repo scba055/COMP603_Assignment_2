@@ -12,8 +12,8 @@ public class DatabaseController extends Model.Database {
     private final Database db;
     private final String enemyFile = "./resources/enemies.txt";
     
-    public DatabaseController(Database db) {
-        this.db = db;
+    public DatabaseController() {
+        this.db = Database.getInstance();
     }
     
     // verifies whether the user already exists within the database
@@ -33,7 +33,7 @@ public class DatabaseController extends Model.Database {
     
     // loads enemies into database
     public Map<String, Enemy> loadEnemies() {
-        db.importEnemies("./resources/enemies.txt");
+        db.importEnemies(enemyFile);
         return db.loadEnemies();
     }
     

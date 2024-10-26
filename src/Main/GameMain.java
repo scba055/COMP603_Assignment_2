@@ -12,8 +12,7 @@ import Model.Database;
 public class GameMain {
 
     public static void main(String[] args) {
-        Database db = new Database();
-        DatabaseController dbCon = new DatabaseController(db);
+        DatabaseController dbCon = new DatabaseController();
         new MainMenuView(dbCon);
     }
     

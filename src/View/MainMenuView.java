@@ -4,8 +4,6 @@ import Model.*;
 import Controller.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.HashMap;
 import java.util.Map;
 
 public class MainMenuView extends JFrame {
@@ -108,7 +106,7 @@ public class MainMenuView extends JFrame {
         String password = new String(passwordField.getPassword());
         String characterName = characterNameField.getText();
 
-        Player newPlayer = dbCon.signup(username, password, username);
+        Player newPlayer = dbCon.signup(username, password, characterName);
 
         boolean success = dbCon.login(newPlayer.getUsername(), newPlayer.getPassword());
         if (success) {
