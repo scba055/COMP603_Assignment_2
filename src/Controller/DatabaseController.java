@@ -68,4 +68,8 @@ public class DatabaseController extends Model.Database {
     public boolean savePlayer(Player player) {
         return db.savePlayer(player);
     }
+    
+    public void printMapCells() {
+        db.printMapCells();
+    }
 }

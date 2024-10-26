@@ -65,9 +65,6 @@ public class GameView extends JFrame {
         setLayout(new BorderLayout());
 
         // Map Display Panel
-//        mapDisplay = new JTextArea(20, 30);
-//        mapDisplay.setEditable(false);
-//        add(new JScrollPane(mapDisplay), BorderLayout.CENTER);
         mapPanel = new JPanel();
         mapPanel.setLayout(new GridLayout(map.getMap().length, map.getMap()[0].length)); // Rows x Columns
         add(mapPanel, BorderLayout.CENTER);
@@ -124,10 +121,18 @@ public class GameView extends JFrame {
         toggleStoreEncounterButtons(storeButtonFlag);
          
         // navigation action listeners
-        upButton.addActionListener(e -> pc.movePlayer('w', map, player));
-        leftButton.addActionListener(e -> pc.movePlayer('a', map, player));
-        downButton.addActionListener(e -> pc.movePlayer('s', map, player));
-        rightButton.addActionListener(e -> pc.movePlayer('d', map, player));
+        upButton.addActionListener(e -> {
+            pc.movePlayer('w', map, player);
+            displayMap(map, player, enemies);}); //updates map
+        leftButton.addActionListener(e -> {
+            pc.movePlayer('a', map, player);
+            displayMap(map, player, enemies);}); // updates map
+        downButton.addActionListener(e -> {
+            pc.movePlayer('s', map, player);
+            displayMap(map, player, enemies);}); // updates map
+        rightButton.addActionListener(e -> {
+            pc.movePlayer('d', map, player);
+            displayMap(map, player, enemies);}); // updates map
         interactButton.addActionListener(e -> gc.interact(pc.getInteraction()));
         
         // enemy encounter action listeners
@@ -148,10 +153,12 @@ public class GameView extends JFrame {
         controlPanel.add(interactButton);
         controlPanel.add(rightButton);
         controlPanel.add(downButton);
+        // enemy/boss panel
         controlPanel.add(attackButton);
         controlPanel.add(healButton);
         controlPanel.add(guardButton);
         controlPanel.add(runButton);
+        // store panel
         controlPanel.add(option1);
         controlPanel.add(option2);
         controlPanel.add(option3);
@@ -208,6 +215,11 @@ public class GameView extends JFrame {
         gameLog.append(message + "\n");
     }
     
+    // display any invalid inputs from the user
+    public void displayError(String message) {
+        JOptionPane.showMessageDialog(this, message);
+    }
+    
     // operations done in SaveLoadController, but UI done here
     private void handleCloseOperation() {
         int choice = JOptionPane.showConfirmDialog(this, 
@@ -257,13 +269,7 @@ public class GameView extends JFrame {
         this.dispose();
         new MainMenuView(dbCon); // initialises Main Menu
     }
-    
-    public void returnToGameMap() {
-    
-    }
-    
-
-    
+        
     // this will handle the attack/guard/heal and run options for the user
     private int showEncounterOptions(String message, String[] options) {
         return JOptionPane.showOptionDialog(this, message, "Encounter",
@@ -310,16 +316,16 @@ public class GameView extends JFrame {
                 if (i == player.getRow() && j == player.getCol()) {
                     cellLabel.setText("P"); // Player
                     cellLabel.setBackground(new Color(0xf8edeb));
-                } else if (layout[i][j] == 'E') {
+                } else if (map.getCell(i, j) == 'E') {
                     cellLabel.setText("E");
                     cellLabel.setBackground(new Color(0xfae1dd));  // Enemy cell
-                } else if (layout[i][j] == 'S') {
+                } else if (map.getCell(i, j) == 'S') {
                     cellLabel.setText("S");
                     cellLabel.setBackground(new Color(0xe8e8e4));  // Store cell
-                } else if (layout[i][j] == 'T') {
+                } else if (map.getCell(i, j) == 'T') {
                     cellLabel.setText("T");
                     cellLabel.setBackground(new Color(0xd8e2dc));
-                } else if (layout[i][j] == 'B') {
+                } else if (map.getCell(i, j) == 'B') {
                     cellLabel.setText("B");
                     cellLabel.setBackground(new Color(0xfec5bb));
                 } else { // terrain color

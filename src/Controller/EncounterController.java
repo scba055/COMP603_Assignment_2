@@ -86,7 +86,6 @@ public class EncounterController {
     public void handleRun() {
         gv.displayMessage("You ran away safely.");
         currentEnemy = null;
-        gv.returnToGameMap();
     }
     
     private void handleVictory() {

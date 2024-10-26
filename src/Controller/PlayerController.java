@@ -64,7 +64,7 @@ public class PlayerController {
             map.setCell(newRow, newCol, 'P');
             validMove = true;
         } else {
-            gv.displayMessage("Invalid move. Try again.");
+            gv.displayError("Invalid move. Try again.");
         }
         return validMove;
     }

@@ -24,6 +24,7 @@ public class Database {
     private String dbusername = "pdc";  // from tutorials
     private String dbpassword = "pdc";  // from tutorials
     private Map<String, Enemy> enemies = new HashMap<>();
+    private Controller.DatabaseController dbCon;
     
     public Database() {
         connect();
@@ -145,7 +146,8 @@ public class Database {
                 "CREATE TABLE MapCells ("
                 + "row INT, "
                 + "col INT, "
-                + "value CHAR(1)"
+                + "value CHAR(1)," // account for P, S, E, T, B
+                + "PRIMARY KEY (row, col)" // no duplications
                 + ")";
         executeTableCreation(createMapInfoTable, "MapInfo");
         executeTableCreation(createMapCellsTable, "MapCells");
@@ -438,46 +440,22 @@ public class Database {
 
         boolean isSaved = false;
         String insertNewMap = "INSERT INTO MAPCELLS (row, col, value) VALUES (?, ?, ?)";
-        String insertNewMapDimensions = "INSERT INTO MAPINFO (map_rows, map_cols) VALUES (?, ?)";
 
-        try (Statement deletest = conn.createStatement();
-             PreparedStatement cellst = conn.prepareStatement(insertNewMap);
-             PreparedStatement infost = conn.prepareStatement(insertNewMapDimensions)) {
-
-            // Save new map dimensions
-            infost.setInt(1, map.getMap().length);  // Should be 5
-            infost.setInt(2, map.getMap()[0].length);  // Should be 10
-            infost.executeUpdate();
-
-            // Save player position
-            cellst.setInt(1, player.getRow());
-            cellst.setInt(2, player.getCol());
-            cellst.setString(3, "P");
-            cellst.addBatch();
-
-            // Save enemy locations
-            for (String key : enemies.keySet()) {
-                Enemy enemy = enemies.get(key);
-                cellst.setInt(1, enemy.getRow());
-                cellst.setInt(2, enemy.getCol());
-                cellst.setString(3, "E");
-                cellst.addBatch();
-            }
-
-            // Save other encounter points (Stores, Treasure, Boss)
-            char[][] layout = map.getMap();
-            for (int i = 0; i < layout.length; i++) {
-                for (int j = 0; j < layout[i].length; j++) {
-                    if (layout[i][j] != '.' && layout[i][j] != 'P' && layout[i][j] != 'E') {
-                        cellst.setInt(1, i);
-                        cellst.setInt(2, j);
-                        cellst.setString(3, String.valueOf(layout[i][j]));
-                        cellst.addBatch();
-                    }
+        try (PreparedStatement cellst = conn.prepareStatement(insertNewMap)) {
+            
+            for (int i = 0; i < map.getMap().length; i++) {
+                for (int j = 0; j < map.getMap()[i].length; j++) {
+                    char value = map.getCell(i, j);
+                    
+                    // save the cell to the database
+                    cellst.setInt(1, i);
+                    cellst.setInt(2, j);
+                    cellst.setString(3, String.valueOf(value));
+                    cellst.addBatch(); // add to batch
                 }
             }
 
-            cellst.executeBatch();
+            cellst.executeBatch(); // execute all inserts
             System.out.println("Map successfully saved.");
             isSaved = true;
         } catch (SQLException e) {
@@ -486,6 +464,23 @@ public class Database {
         return isSaved;
     }
 
+    // debugger method to see what is being written to saveMap
+    public void printMapCells() {
+    String query = "SELECT row, col, value FROM MAPCELLS";
+    try (Statement st = conn.createStatement();
+         ResultSet rs = st.executeQuery(query)) {
+
+        System.out.println("MAPCELLS Content:");
+        while (rs.next()) {
+            int row = rs.getInt("row");
+            int col = rs.getInt("col");
+            char value = rs.getString("value").charAt(0);
+            System.out.printf("Cell (%d, %d) = %c%n", row, col, value);
+        }
+    } catch (SQLException e) {
+        Logger.getLogger(Database.class.getName()).log(Level.SEVERE, "Error printing MAPCELLS.", e);
+    }
+}
 
     
     // inserts the necessary dimensions from the saved map in the database
@@ -500,7 +495,6 @@ public class Database {
         String selectMapInfo = "SELECT map_rows, map_cols FROM MAPINFO";
         String selectMapData = "SELECT row, col, value FROM MAPCELLS";
         char[][] layout = null;
-        GameMap map = null;
 
         try (Statement st = conn.createStatement();
              ResultSet infoRs = st.executeQuery(selectMapInfo)) {
@@ -511,9 +505,9 @@ public class Database {
                 layout = new char[rows][cols];
 
                 // Initialize map with default terrain '.'
-                for (int i = 0; i < rows; i++) {
-                    Arrays.fill(layout[i], '.');
-                }
+//                for (int i = 0; i < rows; i++) {
+//                    Arrays.fill(layout[i], '.');
+//                }
 
                 try (PreparedStatement cellst = conn.prepareStatement(selectMapData);
                      ResultSet cellRs = cellst.executeQuery()) {
@@ -531,18 +525,8 @@ public class Database {
                             if (value == 'P') {
                                 player.setRow(player.getRow());
                                 player.setCol(player.getCol());
-                            } else if (value == 'S') {
-                                map.setRandomLocation('S');
-                            } else if (value == 'E') {
-                                map.setRandomLocation('E');
-                                System.out.printf("Enemy at (%d, %d)%n", row, col);
-                            } else if (value == 'T') {
-                                map.setRandomLocation('T');
-                                System.out.printf("Treasure at (%d, %d)%n", row, col);
-                            } else if (value == 'B') {
-                                map.setRandomLocation('B');
-                                System.out.printf("Boss at (%d, %d)%n", row, col);
-                            }
+                            } 
+                            System.out.printf("Loaded cell at (%d,%d) = %c%n", row, col, value);
                         } else {
                             System.err.printf("Invalid cell at (%d, %d) skipped.%n", row, col);
                         }
@@ -551,30 +535,8 @@ public class Database {
             } else {
                 System.err.println("No map data found. Creating a new map.");
                 GameMap newMap = new GameMap(5, 10);  // create a 5x10 map
-                for (int i = 0; i < newMap.getMap().length; i++) {
-                    for (int j = 0; j < newMap.getMap()[0].length; j++) {
-                        char value = newMap.getCell(i, j);
-                        switch (value) {
-                            case 'P':
-                                player.setRow(player.getRow());
-                                player.setCol(player.getCol());
-                                break;
-                            case 'S':
-                                newMap.setRandomLocation(value);
-                                break;
-                            case 'E':
-                                newMap.setRandomLocation(value);
-                                break;
-                            case 'T':
-                                newMap.setRandomLocation(value);
-                                break;
-                            case 'B':
-                                newMap.setRandomLocation(value);
-                                break;
-                        }
-                    }
-                }
                 saveMap(newMap, player, enemies);  // saves it
+                dbCon.printMapCells(); // debug
                 return newMap;
             }
         } catch (SQLException e) {
