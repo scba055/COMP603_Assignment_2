@@ -17,9 +17,9 @@ import java.util.logging.Logger;
         
 public class Database {
     private Connection conn;
-    private String url = "jdbc:derby:GameDB;create=true";  // URL of the DB host
-    private String dbusername = "pdc";  // your DB username
-    private String dbpassword = "pdc";  // your DB password
+    private String url = "jdbc:derby:GameDB;create=true";  // DB URL
+    private String dbusername = "pdc";  // from tutorials
+    private String dbpassword = "pdc";  // from tutorials
     private String username;
     private String password;
     private View.GameView gv;
@@ -174,13 +174,14 @@ public class Database {
     public boolean login(String username, String password) {
         this.username = username;
         this.password = password;
+        boolean matchFound = false;
 
         // Check if the username exists in the database
         if (checkName(username)) {
             // Username exists, so check the password
             try {
                 Statement statement = conn.createStatement();
-                ResultSet rs = statement.executeQuery("SELECT password, score FROM USERINFO WHERE userid='" + username + "'");
+                ResultSet rs = statement.executeQuery("SELECT password" + username + "'");
                 if (rs.next()) {
                     String pass = rs.getString("password");
                     // Validate the password
@@ -188,29 +189,48 @@ public class Database {
                         gv.displayMessage("Welcome back " + username + "!");
                         rs.close();  // Close ResultSet
                         statement.close();  // Close Statement
-                        return true;  // Successful login
+                        matchFound = true;  // Successful login
                     } else {
                         // Password is incorrect
                         rs.close();
                         statement.close();
-                        return false;  // Invalid password
+                        matchFound = false;  // Invalid password
                     }
                 }
             } catch (SQLException e) {
                 Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
             }
-        } else {
-            // Username doesn't exist, so create a new user
-            try {
-                Statement statement = conn.createStatement();
-                statement.executeUpdate("INSERT INTO USERINFO (userid, password, score) VALUES ('" + username + "', '" + password + "', 0)");
-                statement.close();  // Close Statement
-                return true;  // New user successfully created
+        }
+        return matchFound;
+    }
+    
+    // used in the signUp process;
+    public Player newPlayer(String username, String password, String characterName) {
+        Player player = null;
+        String insertPlayerSQL = 
+            "INSERT INTO Player (username, password, name, health, level, attack, defense, exp, gold, row, col) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    
+            try (PreparedStatement pst = conn.prepareStatement(insertPlayerSQL)) {
+                pst.setString(1, username);  // Username provided by the user
+                pst.setString(2, password);  // password provided by the user
+                pst.setString(3, characterName);  // Character name provided by the user
+                pst.setInt(4, 100);  // Default health value
+                pst.setInt(5, 1);  // Default level value
+                pst.setInt(6, 10);  // Default attack value
+                pst.setInt(7, 10);  // Default defense value
+                pst.setInt(8, 0);  // Default experience points
+                pst.setInt(9, 0);  // Default gold
+                pst.setInt(10, 0);  // Default row position
+                pst.setInt(11, 0);  // Default column position
+
+                pst.executeUpdate();  // Execute the SQL statement
+                System.out.println("New player created successfully.");
+                player = loadPlayer(username);
             } catch (SQLException e) {
                 Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
             }
-        }
-        return false;  // If anything fails, return false
+        return player;
     }
     
     // from tutorial 9_3 without the score mechanics

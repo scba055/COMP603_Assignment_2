@@ -108,11 +108,9 @@ public class MainMenuView extends JFrame {
         String password = new String(passwordField.getPassword());
         String characterName = characterNameField.getText();
 
-        Player newPlayer = new Player(characterName, 100, 1, 10, 5, 0, 0);
-        newPlayer.setUsername(username);
-        newPlayer.setPassword(password);
+        Player newPlayer = dbCon.signup(username, password, username);
 
-        boolean success = dbCon.signup(newPlayer.getUsername(), newPlayer.getPassword());
+        boolean success = dbCon.login(newPlayer.getUsername(), newPlayer.getPassword());
         if (success) {
             JOptionPane.showMessageDialog(this, "Signup successful! Starting a new game.");
 

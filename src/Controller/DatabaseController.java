@@ -22,8 +22,8 @@ public class DatabaseController extends Model.Database {
     }
     
     // creates new user
-    public boolean signup(String username, String password) {
-        return db.login(username, password);
+    public Player signup(String username, String password, String charName) {
+        return db.newPlayer(username, password, charName);
     }
     
     // loads a player from database
