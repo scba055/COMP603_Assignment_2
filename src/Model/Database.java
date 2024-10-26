@@ -44,6 +44,7 @@ public class Database {
             // this check should prevent multiple connections
             if (conn == null || conn.isClosed()) {
                 conn = DriverManager.getConnection(testUrl, dbusername, dbpassword);
+                conn.setAutoCommit(true); // ensures auto-commit to any changes in the database
                 System.out.println("Database successfully connected.");
                 isConned = true;
             }
@@ -61,7 +62,7 @@ public class Database {
             if (conn != null && !conn.isClosed()) {
                 return conn;
             } else {
-                connect();
+                connect(); // reconnect if connection is closed
                 return conn;
             }
         } catch (SQLException e) {
@@ -88,12 +89,12 @@ public class Database {
         createPlayerTable();
         createInventoryTable();
         createEnemiesTable();
+        createMapTables();
     }
     
     // adds player stats into the database
     private void createPlayerTable() {
-        try (Statement pst = conn.createStatement()){
-            String createPlayerTable = 
+        String createPlayerTable = 
                     "CREATE TABLE Player (" +
                     "id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY," +
                     "username VARCHAR(50) UNIQUE NOT NULL, " +
@@ -108,35 +109,19 @@ public class Database {
                     "row INT, " +
                     "col INT" +
                     ")";
-            pst.executeUpdate(createPlayerTable);
-            System.out.println("Player table has been created or already exists."); // for debugging
-        } catch (SQLException e) {
-            if (e.getSQLState().equals("X0Y32")) { // sees if an inventory table exists in the database
-                System.out.println("Player table already exists");
-            } else {
-                Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
-            }
-        }
+        executeTableCreation(createPlayerTable, "Player");
     }
     
     // adds the player inventory to the database
     private void createInventoryTable() {
-        try (Statement ist = conn.createStatement()){
-            String createInventoryTable = 
+        String createInventoryTable = 
                     "CREATE TABLE Inventory (" +
                     "player_id INT," +
                     "item_name VARCHAR(50)," +
                     "quantity INT," +
                     "FOREIGN KEY (player_id) REFERENCES Player(id) ON DELETE CASCADE" +
                     ")";
-            ist.executeUpdate(createInventoryTable);
-        } catch (SQLException e) {
-            if (e.getSQLState().equals("X0Y32")) { // sees if an inventory table exists in the database
-                System.out.println("Inventory table already exists");
-            } else {
-                Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
-            }
-        }
+        executeTableCreation(createInventoryTable, "Inventory");
     }
     
     private void createEnemiesTable() {
@@ -146,15 +131,47 @@ public class Database {
                 "name VARCHAR(50), " +
                 "level INT, health INT, attack INT, defense INT)";
         
-        try (Statement est = conn.createStatement()) {
-            est.executeUpdate(enemyTable);
-            System.out.println("Enemies table created.");
+        executeTableCreation(enemyTable, "Enemies");
+    }
+    
+    private void createMapTables() {
+        String createMapInfoTable =
+                "CREATE TABLE MapInfo ("
+                + "map_rows INT, "
+                + "map_cols INT"
+                + ")";
+        String createMapCellsTable = 
+                "CREATE TABLE MapCells ("
+                + "row INT, "
+                + "col INT, "
+                + "value CHAR(1)"
+                + ")";
+        executeTableCreation(createMapInfoTable, "MapInfo");
+        executeTableCreation(createMapCellsTable, "MapCells");
+    }
+    
+    // simplifies table creation
+    private void executeTableCreation(String sql, String tableName) {
+        try (Statement st = conn.createStatement()) {
+            st.executeUpdate(sql);
+            System.out.println(tableName + " table created successfully.");
         } catch (SQLException e) {
             if (e.getSQLState().equals("X0Y32")) { // sees if an inventory table exists in the database
-                System.out.println("Enemies table already exists");
+                System.out.println(tableName + " table already exists");
             } else {
                 Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
             }
+        }
+    }
+    
+    private boolean tableExists(String tableName) {
+        try (ResultSet rs = conn.getMetaData().getTables(null, null, 
+                tableName.toUpperCase(), null)) {
+            return rs.next();
+        } catch (SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, 
+                    "Error checking table's existence.", e);
+            return false;
         }
     }
     
@@ -412,12 +429,17 @@ public class Database {
     }
     
     public boolean saveMap(GameMap map) {
+        if (!tableExists("MAPCELLS") || !tableExists("MAPINFO")) {
+            System.err.println("MAPCELLS or MAPINFO not found.");
+            createMapTables(); // attempt table creation if missing
+        }
+        
         boolean isSaved = false;
-        String deleteOldMapData = "DELETE FROM MapCells";
-        String deleteOldMapDimensions = "DELETE FROM MapInfo";
-        String insertNewMap = "INSERT INTO MapCells (row, col, value)"
+        String deleteOldMapData = "DELETE FROM MAPCELLS";
+        String deleteOldMapDimensions = "DELETE FROM MAPINFO";
+        String insertNewMap = "INSERT INTO MAPCELLS (row, col, value)"
                 + "VALUES (?, ?, ?)";
-        String insertNewMapDimensions = "INSERT INTO MapInfo (map_rows, map_cols)"
+        String insertNewMapDimensions = "INSERT INTO MAPINFO (map_rows, map_cols)"
                 + "VALUES (?,?)";
         
         try (Statement deletest = conn.createStatement();
@@ -454,68 +476,48 @@ public class Database {
     
     // inserts the necessary dimensions from the saved map in the database
     // also inserts the value within an index in the map
+    // if no map data found then make a new map
     public GameMap loadMap() {
-        String selectMapInfo = "SELECT map_rows, map_cols FROM MapInfo";
-        String selectMapData = "Select row, col, value FROM MapCells";
+        if (!tableExists("MAPCELLS") || !tableExists("MAPINFO")) {
+            System.err.println("MAPCELLS or MAPINFO not found. Creating new map tables.");
+            createMapTables();
+        }
+
+        String selectMapInfo = "SELECT map_rows, map_cols FROM MAPINFO";
+        String selectMapData = "SELECT row, col, value FROM MAPCELLS";
         char[][] layout = null;
-        
-        try(Statement st = conn.createStatement();
-                ResultSet infors = st.executeQuery(selectMapInfo)) {
-            
+
+        try (Statement st = conn.createStatement();
+             ResultSet infors = st.executeQuery(selectMapInfo)) {
+
             if (infors.next()) {
                 int rows = infors.getInt("map_rows");
                 int cols = infors.getInt("map_cols");
                 layout = new char[rows][cols];
-            }
-            
-            if (layout != null) {
-                try(PreparedStatement cellst = conn.prepareStatement(selectMapData)) {
-                    ResultSet cellrs = cellst.executeQuery();
-                    
-                    while(cellrs.next()) {
+
+                try (PreparedStatement cellst = conn.prepareStatement(selectMapData);
+                     ResultSet cellrs = cellst.executeQuery()) {
+
+                    while (cellrs.next()) {
                         int row = cellrs.getInt("row");
                         int col = cellrs.getInt("col");
                         char value = cellrs.getString("value").charAt(0);
                         layout[row][col] = value;
                     }
                 }
-            }
-        } catch (SQLException e) {
-            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
-        }
-        // if game map is null, makes a new game map
-        return layout != null ? new GameMap(layout.length, layout[0].length,
-        layout) : new GameMap(5,10);
-    }
-    
-    public GameMap checkAndLoadMap() {
-        String selectMapInfo = "SELECT COUNT(*) AS row_count FROM MapInfo";
-        String selectMapCells = "SELECT COUNT(*) AS cell_count FROM MapCells";
-        
-        try (Statement st = conn.createStatement()) {
-            // Checks if there is any rows saved in MapInfo
-            ResultSet infoResult = st.executeQuery(selectMapInfo);
-            int mapInfoCount = infoResult.next() ? infoResult.getInt("row_count") : 0;
-            
-            // checks if there is any rows saved in MapCells
-            ResultSet cellsResult = st.executeQuery(selectMapCells);
-            int mapCellCount = cellsResult.next() ? cellsResult.getInt("cell_count") : 0;
-            
-            // if both tables are empty, create a new map and save it to the database
-            if (mapInfoCount == 0 || mapCellCount == 0) {
-                Logger.getLogger(Database.class.getName()).log(Level.INFO, 
-                        "No map data found. Creating a new map.");
-                GameMap newMap = new GameMap(5,10);
+            } else {
+                System.err.println("No map data found. Creating a new map.");
+                GameMap newMap = new GameMap(5, 10);
                 saveMap(newMap);
                 return newMap;
             }
-            
-            // if there is existing data then load and return existing map
-            return loadMap();
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, 
-                    "No map data found. Creating a new map.");
-            return null; // returns null if there is an issue
+                    "Error loading map.", e);
+            return null;  // Return null if loading fails
         }
+        
+        return new GameMap(layout.length, layout[0].length, layout);
     }
+
 }

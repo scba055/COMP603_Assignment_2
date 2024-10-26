@@ -86,6 +86,10 @@ public class MainMenuView extends JFrame {
             // Load existing game data
             Player player = dbCon.loadPlayer(username);
             GameMap map = dbCon.loadMap();
+            if (map == null) {
+                JOptionPane.showMessageDialog(this, "Map could not be loaded.");
+                return;
+            }
             Map<String, Enemy> enemies = dbCon.loadEnemies();
 
             // Initialize controllers
@@ -114,7 +118,12 @@ public class MainMenuView extends JFrame {
             JOptionPane.showMessageDialog(this, "Signup successful! Starting a new game.");
 
             // Initialize game data for the new player
-            GameMap map = new GameMap(5, 5); // New game map
+            GameMap map = dbCon.loadMap(); // New game map
+            if (map == null) {
+                JOptionPane.showMessageDialog(this, "Map could not be loaded.");
+                return;
+            }
+            
             Map<String, Enemy> enemies = dbCon.loadEnemies();
 
             // Initialize controllers

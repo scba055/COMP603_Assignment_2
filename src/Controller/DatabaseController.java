@@ -57,7 +57,7 @@ public class DatabaseController extends Model.Database {
     
     // loads the map
     public GameMap loadMap() {
-        return db.checkAndLoadMap();
+        return db.loadMap();
     }
     
     // saves the map

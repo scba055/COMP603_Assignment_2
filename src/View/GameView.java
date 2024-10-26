@@ -61,10 +61,12 @@ public class GameView extends JFrame {
         setLayout(new BorderLayout());
         
         mapDisplay = new JTextArea(10,30);
+        if (map == null) {
+            throw new IllegalStateException("Map data cannot be null.");
+        }
         mapDisplay.setEditable(false);
         gameLog = new JTextArea();
         gameLog.setEditable(false);
-        JPanel optionsPanel = new JPanel(new GridLayout(1,2));
         
         enemyStatsArea = new JTextArea();
         enemyStatsArea.setEditable(false);
@@ -167,6 +169,7 @@ public class GameView extends JFrame {
     
     // adding buttons for the options menu
     private void addOptionsButtons() {
+        optionsPanel = new JPanel(new GridLayout(2,3));
         JButton infoButton = new JButton("Player Info");
         JButton signOutButton = new JButton("Sign Out");
         
