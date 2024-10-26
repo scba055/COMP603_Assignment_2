@@ -26,8 +26,8 @@ public class PlayerController {
     
     // class that allows the player to move positions in the map
     public boolean movePlayer(char direction, GameMap map, Player player) {
-        int newRow = player.getRow();
-        int newCol = player.getCol();
+        int newRow = this.oldRow;
+        int newCol = this.oldCol;
         boolean validMove= false;
         
         switch (direction) {

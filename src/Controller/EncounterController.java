@@ -16,6 +16,7 @@ import java.util.Random;
 public class EncounterController {
     private PlayerController pc;
     private View.GameView gv;
+    private DatabaseController dbCon;
     private final GameMap map;
     private final Player player;
     private final Map<String, Integer> inventory;
@@ -34,34 +35,109 @@ public class EncounterController {
     
     public void storeEncounter() {
         gv.displayMessage("Welcome to Sarina's store!" +
-                "\n1. 3xPotion Pots [25G]" +
-                "\n2. Sword Upgrade [50G]" +
-                "\n3. Shield Upgrade [50G]" +
+                "\n1. 3xPotion Pots [5G]" +
+                "\n2. Sword Upgrade [25G]" +
+                "\n3. Shield Upgrade [25G]" +
                 "\n4. Exit");
-        gv.toggleStoreEncounterButtons(true);
+        optionHandler();
     }
     
-    public void handleOption1() {
-    
+    public void optionHandler() {
+        boolean decisionMade = false;
+        if (handleOption1() || handleOption2() || handleOption3() || handleOption4()) {
+            decisionMade = true;
+            gv.toggleStoreEncounterButtons(false); // hides the buttons
+        }
     }
     
-    public void handleOption2() {
-    
+    public boolean handleOption1() { // potions galore
+        // finds the item in inventory then adds to the amount
+        // then subtracts current gold amount
+        if (player.getGold() >= 5) {
+            String key = "Health Potion";
+            int boughtQuantity = 5;
+            if (inventory.containsKey(key)) {
+                int currentQuantity = inventory.get(key);
+                inventory.put(key, currentQuantity + boughtQuantity);
+            } else {
+                inventory.put(key, boughtQuantity);
+            }
+            player.subGold(5);
+        } else {
+            gv.displayMessage("I'm sorry, but you do not seem to have enough gold.");
+            gv.displayMessage("Please come back later!");
+        }
+        boolean decision = true; // automatically true since user clicked this option
+        return decision;
     }
     
-    public void handleOption3() {
-    
+    public boolean handleOption2() { // sword upgrade
+        if (player.getGold() >= 20) {
+            String key1 = "Rusty Sword";
+            String key2 = "Silver Sword";
+            String key3 = "Gold Sword";
+            String key4 = "Excalibur";
+            if (inventory.containsKey(key1)) {
+                inventory.remove(key1);
+                inventory.put(key2, 1);
+                player.setAttack(30);
+                player.subGold(20);
+            } else if (inventory.containsKey(key2)) {
+                inventory.remove(key2);
+                inventory.put(key3, 1);
+                player.setAttack(70);
+                player.subGold(20);
+            } else if (inventory.containsKey(key3)) {
+                gv.displayMessage("We don't have higher upgrades for this weapon.");
+            } else if (inventory.containsKey(key4)) {
+                gv.displayMessage("EXCALIBUR?! How in the world did you get that? "
+                        + "\nThere is no better sword than this, I'm afraid.");
+            }
+        } else {
+            gv.displayMessage("I'm sorry, but you do not seem to have enough gold.");
+            gv.displayMessage("Please come back later!");
+        }
+        boolean decision = true; // automatically true since user clicked this option
+        return decision;
     }
     
-    public void handleOption4() {
+    public boolean handleOption3() { // shield upgrade
+        if (player.getGold() >= 20) {
+            String key1 = "Wooden Shield";
+            String key2 = "Silver Shield";
+            String key3 = "Gold Shield";
+
+            if (inventory.containsKey(key1)) {
+                inventory.remove(key1);
+                inventory.put(key2, 1);
+                player.setDefense(30);
+                player.subGold(20);
+            } else if (inventory.containsKey(key2)) {
+                inventory.remove(key2);
+                inventory.put(key3, 1);
+                player.subGold(70);
+            } else if (inventory.containsKey(key3)) {
+                gv.displayMessage("We don't have higher upgrades for this shield.");
+            }
+        } else {
+            gv.displayMessage("I'm sorry, but you do not seem to have enough gold.");
+            gv.displayMessage("Please come back later!");
+        }
+        boolean decision = true; // automatically true since user clicked this option
+        return decision;
+    }
     
+    public boolean handleOption4() { // leaving the shop
+        gv.displayMessage("Alright, feel free to swing by again!");
+        boolean decision = true; // automatically true since user clicked this option
+        return decision;
     }
     
     public void enemyEncounter(Enemy enemy) {
         this.currentEnemy = enemy;
         gv.displayMessage("A random " + enemy.getName() + " has appeared!");
         updateEnemyStats();
-        gv.toggleEnemyEncounterButtons(true);
+        
     }
     
     private void updateEnemyStats() {

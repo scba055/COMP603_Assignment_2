@@ -28,7 +28,6 @@ public class GameView extends JFrame {
     private JPanel controlPanel;
     private JPanel optionsPanel;
     private JTextArea gameLog;
-    private JTextArea mapDisplay;
     private JPanel mapPanel;
     
     // custom buttons for encounters (enemy and store)
@@ -45,11 +44,11 @@ public class GameView extends JFrame {
     // custom area for enemy encounters
     private JTextArea enemyStatsArea;
     
-    public GameView(Player player, Map<String, Enemy> enemies, 
+    public GameView(Player player, GameMap map, Map<String, Enemy> enemies, 
             Controller.PlayerController pc, Controller.EncounterController ec,
             Controller.GameController gc, Controller.SaveLoadController slc){
         this.player = player;
-        this.map = new GameMap(5,10); 
+        this.map = map;
         this.enemies = enemies;
         this.pc = pc;
         this.ec = ec;
@@ -82,7 +81,7 @@ public class GameView extends JFrame {
         // Game Log on the right side
         gameLog = new JTextArea(10, 20);
         gameLog.setEditable(false);
-        add(new JScrollPane(gameLog), BorderLayout.EAST);
+        add(new JScrollPane(gameLog), BorderLayout.EAST); // allows for scrollability
 
         // Window close operation
         addWindowListener(new WindowAdapter() {
@@ -92,7 +91,7 @@ public class GameView extends JFrame {
             }
         });
 
-        displayMap(map, player, enemies);
+        displayMap(map, player);
         setVisible(true);
     }
     
@@ -123,7 +122,7 @@ public class GameView extends JFrame {
         // navigation action listeners
         upButton.addActionListener(e -> {
             if (pc.movePlayer('w', map, player)) { // checks if move is valid
-                displayMap(map, player, enemies); //updates map
+                displayMap(map, player); //updates map
                 gc.interact(pc.getInteraction()); // checks for interactable
             } else {
                 displayError("Invalid move. Try again.");
@@ -132,7 +131,7 @@ public class GameView extends JFrame {
             
         leftButton.addActionListener(e -> {
             if (pc.movePlayer('a', map, player)) {
-                displayMap(map, player, enemies); //updates map
+                displayMap(map, player); //updates map
                 gc.interact(pc.getInteraction());
             } else {
                 displayError("Invalid move. Try again.");
@@ -140,7 +139,7 @@ public class GameView extends JFrame {
         }); 
         downButton.addActionListener(e -> {
             if (pc.movePlayer('s', map, player)) {
-                displayMap(map, player, enemies); //updates map
+                displayMap(map, player); //updates map
                 gc.interact(pc.getInteraction());
             } else {
                 displayError("Invalid move. Try again.");
@@ -148,7 +147,7 @@ public class GameView extends JFrame {
         });
         rightButton.addActionListener(e -> {
             if (pc.movePlayer('d', map, player)) {
-                displayMap(map, player, enemies); //updates map
+                displayMap(map, player); //updates map
                 gc.interact(pc.getInteraction());
             } else {
                 displayError("Invalid move. Try again.");
@@ -234,6 +233,8 @@ public class GameView extends JFrame {
     // display game messages
     public void displayMessage(String message) {
         gameLog.append(message + "\n");
+        // scroll to latest entry
+        gameLog.setCaretPosition(gameLog.getDocument().getLength());
     }
     
     // display any invalid inputs from the user
@@ -321,7 +322,7 @@ public class GameView extends JFrame {
     }
     
     // displays the map, showing 'P' as player's position on map
-    private void displayMap(GameMap map, Player player, Map<String, Enemy> enemies) {
+    public void displayMap(GameMap map, Player player) {
         mapPanel.removeAll(); // Clear any previous components in the panel
         
         char[][] layout = this.map.getMap();
@@ -330,7 +331,7 @@ public class GameView extends JFrame {
                 JLabel cellLabel = new JLabel(String.valueOf(layout[i][j]), SwingConstants.CENTER);
                 cellLabel.setOpaque(true);
                 cellLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));  // Optional border
-
+                
                 // Customize specific cells (e.g., player's position, enemies, stores, etc.)
                 if (i == player.getRow() && j == player.getCol()) {
                     cellLabel.setText("P"); // Player
@@ -341,6 +342,7 @@ public class GameView extends JFrame {
                     cellLabel.setBackground(new Color(0xfae1dd));  // Enemy cell
                 } else if (map.getCell(i, j) == 'S') {
                     cellLabel.setText("S");
+                    displayMessage("You have entered a store!");
                     gc.interact("S");
                     cellLabel.setBackground(new Color(0xe8e8e4));  // Store cell
                 } else if (map.getCell(i, j) == 'T') {
