@@ -24,17 +24,8 @@ public class PlayerController {
         this.oldCol = player.getCol();
     }
     
-    private void processPlayerMovement(char move) {
-        if (movePlayer(move, map, player)) {
-            // checks if there is an encounter within the new row,col  
-            gc.interact(getInteraction());
-        } else {
-            gv.displayMessage("Invalid move. You cannot leave the world map.");
-        }
-    }
-    
     // class that allows the player to move positions in the map
-    public boolean movePlayer(char direction, Model.GameMap map, Model.Player player) {
+    public boolean movePlayer(char direction, GameMap map, Player player) {
         int newRow = player.getRow();
         int newCol = player.getCol();
         boolean validMove= false;
@@ -64,7 +55,7 @@ public class PlayerController {
             map.setCell(newRow, newCol, 'P');
             validMove = true;
         } else {
-            gv.displayError("Invalid move. Try again.");
+            validMove = false;
         }
         return validMove;
     }

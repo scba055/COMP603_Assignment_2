@@ -122,17 +122,38 @@ public class GameView extends JFrame {
          
         // navigation action listeners
         upButton.addActionListener(e -> {
-            pc.movePlayer('w', map, player);
-            displayMap(map, player, enemies);}); //updates map
+            if (pc.movePlayer('w', map, player)) { // checks if move is valid
+                displayMap(map, player, enemies); //updates map
+                gc.interact(pc.getInteraction()); // checks for interactable
+            } else {
+                displayError("Invalid move. Try again.");
+            }
+        });    
+            
         leftButton.addActionListener(e -> {
-            pc.movePlayer('a', map, player);
-            displayMap(map, player, enemies);}); // updates map
+            if (pc.movePlayer('a', map, player)) {
+                displayMap(map, player, enemies); //updates map
+                gc.interact(pc.getInteraction());
+            } else {
+                displayError("Invalid move. Try again.");
+            }
+        }); 
         downButton.addActionListener(e -> {
-            pc.movePlayer('s', map, player);
-            displayMap(map, player, enemies);}); // updates map
+            if (pc.movePlayer('s', map, player)) {
+                displayMap(map, player, enemies); //updates map
+                gc.interact(pc.getInteraction());
+            } else {
+                displayError("Invalid move. Try again.");
+            }
+        });
         rightButton.addActionListener(e -> {
-            pc.movePlayer('d', map, player);
-            displayMap(map, player, enemies);}); // updates map
+            if (pc.movePlayer('d', map, player)) {
+                displayMap(map, player, enemies); //updates map
+                gc.interact(pc.getInteraction());
+            } else {
+                displayError("Invalid move. Try again.");
+            }
+        });
         interactButton.addActionListener(e -> gc.interact(pc.getInteraction()));
         
         // enemy encounter action listeners
@@ -316,15 +337,19 @@ public class GameView extends JFrame {
                     cellLabel.setBackground(new Color(0xf8edeb));
                 } else if (map.getCell(i, j) == 'E') {
                     cellLabel.setText("E");
+                    gc.interact("E");
                     cellLabel.setBackground(new Color(0xfae1dd));  // Enemy cell
                 } else if (map.getCell(i, j) == 'S') {
                     cellLabel.setText("S");
+                    gc.interact("S");
                     cellLabel.setBackground(new Color(0xe8e8e4));  // Store cell
                 } else if (map.getCell(i, j) == 'T') {
                     cellLabel.setText("T");
+                    gc.interact("T");
                     cellLabel.setBackground(new Color(0xd8e2dc));
                 } else if (map.getCell(i, j) == 'B') {
                     cellLabel.setText("B");
+                    gc.interact("B");
                     cellLabel.setBackground(new Color(0xfec5bb));
                 } else if (map.getCell(i, j) == '.'){ // terrain color
                     cellLabel.setText(".");
@@ -332,6 +357,7 @@ public class GameView extends JFrame {
                 }
                 // colours from https://coolors.co/palettes/popular/6%20colors
                 mapPanel.add(cellLabel); // Add each cell to the GridLayout
+                gc.displayEncounter();
             }
         }
 

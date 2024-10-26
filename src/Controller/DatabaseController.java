@@ -61,7 +61,7 @@ public class DatabaseController extends Model.Database {
     }
     
     // saves the map
-    public boolean saveMap(GameMap map) {
+    public GameMap saveMap(GameMap map) {
         return db.saveMap(map);
     }
     

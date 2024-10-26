@@ -443,13 +443,13 @@ public class Database {
     }
     
     // saves the coordinates of every component (P, S, E, T, B)
-    public boolean saveMap(GameMap map) {
+    public GameMap saveMap(GameMap map) {
         if (!tableExists("MAPCELLS") || !tableExists("MAPINFO")) {
             System.err.println("MAPCELLS or MAPINFO not found. Creating new map tables.");
             createMapTables(); // attempt table creation if missing
         }
 
-        boolean isSaved = false;
+        GameMap savedMap = map;
         String insertNewMap = "INSERT INTO MAPCELLS (row, col, value) VALUES (?, ?, ?)";
 
         try (PreparedStatement cellst = conn.prepareStatement(insertNewMap)) {
@@ -458,21 +458,21 @@ public class Database {
                 for (int j = 0; j < map.getMap()[i].length; j++) {
                     char value = map.getCell(i, j);
                     
-                    // save the cell to the database
+                    // save each cell to the database
                     cellst.setInt(1, i);
                     cellst.setInt(2, j);
                     cellst.setString(3, String.valueOf(value));
                     cellst.addBatch(); // add to batch
+                    
                 }
             }
 
             cellst.executeBatch(); // execute all inserts
             System.out.println("Map successfully saved.");
-            isSaved = true;
         } catch (SQLException e) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
-        return isSaved;
+        return savedMap;
     }
 
     // debugger method to see what is being written to saveMap
@@ -506,6 +506,7 @@ public class Database {
         String selectMapInfo = "SELECT map_rows, map_cols FROM MAPINFO";
         String selectMapData = "SELECT row, col, value FROM MAPCELLS";
         char[][] layout = null;
+        GameMap generatedMap = null;
 
         try (Statement st = conn.createStatement();
              ResultSet infoRs = st.executeQuery(selectMapInfo)) {
@@ -514,11 +515,6 @@ public class Database {
                 int rows = infoRs.getInt("map_rows");
                 int cols = infoRs.getInt("map_cols");
                 layout = new char[rows][cols];
-
-                // Initialize map with default terrain '.'
-//                for (int i = 0; i < rows; i++) {
-//                    Arrays.fill(layout[i], '.');
-//                }
 
                 try (PreparedStatement cellst = conn.prepareStatement(selectMapData);
                      ResultSet cellRs = cellst.executeQuery()) {
@@ -531,19 +527,12 @@ public class Database {
                         // Ensure row and col are within bounds
                         if (row >= 0 && row < rows && col >= 0 && col < cols) {
                             layout[row][col] = value;
-
-                            // Set player position if found
-                            if (value == 'P') {
-                                player.setRow(player.getRow());
-                                player.setCol(player.getCol());
-                            } 
-                            System.out.printf("Loaded cell at (%d,%d) = %c%n", row, col, value);
-                        } else {
-                            System.err.printf("Invalid cell at (%d, %d) skipped.%n", row, col);
                         }
                     }
                 }
+                generatedMap = new GameMap(rows, cols, layout);
             } else {
+                // creates a new map when loading a new save
                 System.err.println("No map data found. Creating a new map.");
                 GameMap newMap = new GameMap(5, 10);  // create a 5x10 map
                 saveMap(newMap);  // saves it
@@ -555,7 +544,7 @@ public class Database {
             return null;
         }
 
-        return new GameMap(layout.length, layout[0].length, layout);
+        return generatedMap;
     }
 
 

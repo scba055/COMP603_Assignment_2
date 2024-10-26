@@ -25,6 +25,7 @@ public class GameController {
     private Model.Player player;
     private Controller.EncounterController ec;
     private Controller.PlayerController pc;
+    private View.GameView gv;
     
     public GameController(EncounterController ec) {
         this.rand = new Random();
@@ -76,15 +77,18 @@ public class GameController {
             String key = player.getRow() + "," + player.getCol();
             Enemy enemy = mapEnemies.get(key);
             ec.enemyEncounter(enemy);
+            gv.toggleEnemyEncounterButtons(true);
             enemyEncounter = false;
         } else if (storeEncounter) {
             ec.storeEncounter();
             storeEncounter = false;
+            gv.toggleStoreEncounterButtons(true);
         } else if (treasureEncounter) {
             ec.treasureEncounter();
             treasureEncounter = false;
         } else if (bossEncounter) {
             ec.bossEncounter();
+            gv.toggleEnemyEncounterButtons(true);
             bossEncounter = false;
         }
     }
