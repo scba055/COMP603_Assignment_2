@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 public class Database {
     private Connection conn;
     private static Database instance;
-    private String url = "jdbc:derby:GameDB;create=true";  // DB URL
+    //private String url = "jdbc:derby:GameDB;create=true";  // DB URL
     private String testUrl = "jdbc:derby:TestDB;create=true"; // test db
     private String dbusername = "pdc";  // from tutorials
     private String dbpassword = "pdc";  // from tutorials

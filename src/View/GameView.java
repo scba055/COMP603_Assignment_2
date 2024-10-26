@@ -48,7 +48,7 @@ public class GameView extends JFrame {
             Controller.PlayerController pc, Controller.EncounterController ec,
             Controller.GameController gc, Controller.SaveLoadController slc){
         this.player = player;
-        this.map = map;
+        this.map = new GameMap(5,10);
         this.enemies = enemies;
         this.pc = pc;
         this.ec = ec;
@@ -124,6 +124,7 @@ public class GameView extends JFrame {
             if (pc.movePlayer('w', map, player)) { // checks if move is valid
                 displayMap(map, player); //updates map
                 gc.interact(pc.getInteraction()); // checks for interactable
+                map.setCell(player.getRow(), player.getCol(), '.');
             } else {
                 displayError("Invalid move. Try again.");
             }
@@ -133,6 +134,7 @@ public class GameView extends JFrame {
             if (pc.movePlayer('a', map, player)) {
                 displayMap(map, player); //updates map
                 gc.interact(pc.getInteraction());
+                map.setCell(player.getRow(), player.getCol(), '.');
             } else {
                 displayError("Invalid move. Try again.");
             }
@@ -141,6 +143,7 @@ public class GameView extends JFrame {
             if (pc.movePlayer('s', map, player)) {
                 displayMap(map, player); //updates map
                 gc.interact(pc.getInteraction());
+                map.setCell(player.getRow(), player.getCol(), '.');
             } else {
                 displayError("Invalid move. Try again.");
             }
@@ -149,6 +152,7 @@ public class GameView extends JFrame {
             if (pc.movePlayer('d', map, player)) {
                 displayMap(map, player); //updates map
                 gc.interact(pc.getInteraction());
+                map.setCell(player.getRow(), player.getCol(), '.');
             } else {
                 displayError("Invalid move. Try again.");
             }
@@ -191,11 +195,9 @@ public class GameView extends JFrame {
             downButton.setVisible(false);
             interactButton.setVisible(false);
             if (enemyButtonFlag == true) {
-                storeButtonFlag = false;
-                toggleStoreEncounterButtons(storeButtonFlag);
-            } else if (storeButtonFlag == true) {
-                enemyButtonFlag = false;
                 toggleEnemyEncounterButtons(enemyButtonFlag);
+            } else if (storeButtonFlag == true) {
+                toggleStoreEncounterButtons(storeButtonFlag);
             }
         }
     }
@@ -323,7 +325,7 @@ public class GameView extends JFrame {
     
     // displays the map, showing 'P' as player's position on map
     public void displayMap(GameMap map, Player player) {
-        mapPanel.removeAll(); // Clear any previous components in the panel
+        mapPanel.removeAll(); // clear any previous components in the panel
         
         char[][] layout = this.map.getMap();
         for (int i = 0; i < layout.length; i++) {
@@ -332,31 +334,33 @@ public class GameView extends JFrame {
                 cellLabel.setOpaque(true);
                 cellLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));  // Optional border
                 
-                // Customize specific cells (e.g., player's position, enemies, stores, etc.)
+                if (player.getRow() == i && player.getCol() == j) {
+                    if (map.getCell(i, j) == 'S') {
+                        displayMessage("You have entered a store!");
+                    }
+                }
+                
+                // customize specific cells (e.g., player's position, enemies, stores, etc.)
                 if (i == player.getRow() && j == player.getCol()) {
                     cellLabel.setText("P"); // Player
                     cellLabel.setBackground(new Color(0xf8edeb));
                 } else if (map.getCell(i, j) == 'E') {
                     cellLabel.setText("E");
-                    gc.interact("E");
                     cellLabel.setBackground(new Color(0xfae1dd));  // Enemy cell
                 } else if (map.getCell(i, j) == 'S') {
                     cellLabel.setText("S");
-                    displayMessage("You have entered a store!");
-                    gc.interact("S");
                     cellLabel.setBackground(new Color(0xe8e8e4));  // Store cell
                 } else if (map.getCell(i, j) == 'T') {
                     cellLabel.setText("T");
-                    gc.interact("T");
                     cellLabel.setBackground(new Color(0xd8e2dc));
                 } else if (map.getCell(i, j) == 'B') {
                     cellLabel.setText("B");
-                    gc.interact("B");
                     cellLabel.setBackground(new Color(0xfec5bb));
                 } else if (map.getCell(i, j) == '.'){ // terrain color
                     cellLabel.setText(".");
                     cellLabel.setBackground(new Color(0xfcd5ce));
                 }
+                
                 // colours from https://coolors.co/palettes/popular/6%20colors
                 mapPanel.add(cellLabel); // Add each cell to the GridLayout
                 gc.displayEncounter();

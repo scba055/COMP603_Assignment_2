@@ -47,24 +47,28 @@ public class GameController {
         }
     }
     
-    public void interact(String cell) {
-        String currentCell = cell;
+    public void interact(char cell) {
+        char currentCell = cell;
         switch (currentCell) {
-            case "S ":
+            case 'S':
                 // store handling
                 storeEncounter = true;
+                displayEncounter();
                 break;
-            case "E ":
+            case 'E':
                 // enemy handling
                 enemyEncounter = true;
+                displayEncounter();
                 break;
-            case "T ":
+            case 'T':
                 // treasure handling
                 treasureEncounter = true;
+                displayEncounter();
                 break;
-            case "B ":
+            case 'B':
                 // boss handling
                 bossEncounter = true;
+                displayEncounter();
                 break;
         } 
     }

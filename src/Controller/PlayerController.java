@@ -10,7 +10,7 @@ import Controller.*;
 import View.GameView;
 
 public class PlayerController {
-    private String interaction;
+    private char interaction;
     private Model.Player player;
     private int oldRow, oldCol;
     private GameController gc;
@@ -26,8 +26,8 @@ public class PlayerController {
     
     // class that allows the player to move positions in the map
     public boolean movePlayer(char direction, GameMap map, Player player) {
-        int newRow = this.oldRow;
-        int newCol = this.oldCol;
+        int newRow = player.getRow();
+        int newCol = player.getCol();
         boolean validMove= false;
         
         switch (direction) {
@@ -49,10 +49,12 @@ public class PlayerController {
         // ensures that the player cannot go out-of-bounds
         if (newRow >= 0 && newRow < map.getMap().length 
                 && newCol >= 0 && newCol < map.getMap()[0].length) {
-            interaction = map.getCell(newRow, newCol) + " ";
+            interaction = map.getCell(newRow, newCol);
             map.setCell(oldRow, oldCol, '.'); // replaces the old 
             player.move(newRow, newCol, map);
             map.setCell(newRow, newCol, 'P');
+            player.setRow(newRow);
+            player.setCol(newCol);
             validMove = true;
         } else {
             validMove = false;
@@ -61,5 +63,5 @@ public class PlayerController {
     }
     
     // gets the interaction between cells
-    public String getInteraction() { return interaction; }
+    public char getInteraction() { return interaction; }
 }
