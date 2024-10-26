@@ -39,7 +39,7 @@ public class EncounterController {
                 "\n2. Sword Upgrade [25G]" +
                 "\n3. Shield Upgrade [25G]" +
                 "\n4. Exit");
-        optionHandler();
+        //optionHandler();
     }
     
     public void optionHandler() {

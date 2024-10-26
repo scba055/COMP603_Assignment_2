@@ -332,13 +332,7 @@ public class GameView extends JFrame {
             for (int j = 0; j < layout[i].length; j++) {
                 JLabel cellLabel = new JLabel(String.valueOf(layout[i][j]), SwingConstants.CENTER);
                 cellLabel.setOpaque(true);
-                cellLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));  // Optional border
-                
-                if (player.getRow() == i && player.getCol() == j) {
-                    if (map.getCell(i, j) == 'S') {
-                        displayMessage("You have entered a store!");
-                    }
-                }
+                cellLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK)); 
                 
                 // customize specific cells (e.g., player's position, enemies, stores, etc.)
                 if (i == player.getRow() && j == player.getCol()) {
@@ -356,14 +350,14 @@ public class GameView extends JFrame {
                 } else if (map.getCell(i, j) == 'B') {
                     cellLabel.setText("B");
                     cellLabel.setBackground(new Color(0xfec5bb));
-                } else if (map.getCell(i, j) == '.'){ // terrain color
+                } else { // terrain color
                     cellLabel.setText(".");
                     cellLabel.setBackground(new Color(0xfcd5ce));
                 }
                 
                 // colours from https://coolors.co/palettes/popular/6%20colors
                 mapPanel.add(cellLabel); // Add each cell to the GridLayout
-                gc.displayEncounter();
+                //gc.displayEncounter();
             }
         }
 

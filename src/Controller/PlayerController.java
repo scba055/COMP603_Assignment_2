@@ -49,10 +49,8 @@ public class PlayerController {
         // ensures that the player cannot go out-of-bounds
         if (newRow >= 0 && newRow < map.getMap().length 
                 && newCol >= 0 && newCol < map.getMap()[0].length) {
-            interaction = map.getCell(newRow, newCol);
-            map.setCell(oldRow, oldCol, '.'); // replaces the old 
+            interaction = map.getCell(newRow, newCol); 
             player.move(newRow, newCol, map);
-            map.setCell(newRow, newCol, 'P');
             player.setRow(newRow);
             player.setCol(newCol);
             validMove = true;
