@@ -173,6 +173,10 @@ public class GameView extends JFrame {
         infoButton.addActionListener(e -> displayPlayerStats(player));
         signOutButton.addActionListener(e -> signOut());
         
+        if (optionsPanel == null) {
+            System.out.println("optionsPanel is null!"); // debugging purposes
+        }
+        
         optionsPanel.add(infoButton);
         optionsPanel.add(signOutButton);
     }
@@ -205,12 +209,14 @@ public class GameView extends JFrame {
         if (choice == JOptionPane.YES_OPTION) {
             boolean isSaved = slc.saveGame(player, map);
             if (isSaved) {
+                dbCon.closeConnection();
                 System.exit(0); // if successful, then exit
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to save", "Error", 
                         JOptionPane.ERROR_MESSAGE);
             }
         } else if (choice == JOptionPane.NO_OPTION) {
+            dbCon.closeConnection();
             System.exit(0); // exit without saving
         }
         // cancel option just brings the user back to the game

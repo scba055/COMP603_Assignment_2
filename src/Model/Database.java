@@ -22,8 +22,6 @@ public class Database {
     private String testUrl = "jdbc:derby:TestDB;create=true"; // test db
     private String dbusername = "pdc";  // from tutorials
     private String dbpassword = "pdc";  // from tutorials
-    private String username;
-    private String password;
     private Map<String, Enemy> enemies = new HashMap<>();
     
     public Database() {
@@ -40,18 +38,50 @@ public class Database {
     }
     
     // ensures that the database is connected properly
-    private boolean connect() {
+    public boolean connect() {
         boolean isConned = false;
         try {
-            conn = DriverManager.getConnection(testUrl, dbusername, dbpassword);
-            System.out.println("Database successfully connected.");
-            isConned = true;
+            // this check should prevent multiple connections
+            if (conn == null || conn.isClosed()) {
+                conn = DriverManager.getConnection(testUrl, dbusername, dbpassword);
+                System.out.println("Database successfully connected.");
+                isConned = true;
+            }
         } catch (SQLException e) {
             // prints error message for debugging
-            System.out.println("Error connecting to database: " 
-                    + e.getMessage());
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, 
+                    "Error connecting to database: ", e);
         }
         return isConned;
+    }
+    
+    // provides access to the currently active connection for database
+    public Connection getConnection() {
+        try {
+            if (conn != null && !conn.isClosed()) {
+                return conn;
+            } else {
+                connect();
+                return conn;
+            }
+        } catch (SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, 
+                    "Failed to retreive database connection", e);
+            return null;
+        }
+    }
+    
+    // closes the connection to database, should be called when program is shutdown
+    public void closeConnection() {
+        try {
+            if (conn != null && !conn.isClosed()) {
+                conn.close();
+                System.out.println("Database connection closed.");
+            }
+        } catch(SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE,
+                    "Error closing database connection: ", e);
+        }
     }
     
     private void createTables() {
@@ -193,8 +223,6 @@ public class Database {
     // from tutorial 9_3 without the score mechanics
     // Login method to validate user credentials
     public boolean login(String username, String password) {
-        this.username = username;
-        this.password = password;
         boolean matchFound = false;
 
         // Check if the username exists in the database
@@ -207,7 +235,6 @@ public class Database {
                 if (rs.next()) {
                     String pass = rs.getString("password");
                     if (password.equals(pass)) {
-                        System.out.println("Welcome back " + username + "!");
                         matchFound = true;
                     }
                 }
@@ -390,7 +417,7 @@ public class Database {
         String deleteOldMapDimensions = "DELETE FROM MapInfo";
         String insertNewMap = "INSERT INTO MapCells (row, col, value)"
                 + "VALUES (?, ?, ?)";
-        String insertNewMapDimensions = "INSERT INTO MapInfo (rows, cols)"
+        String insertNewMapDimensions = "INSERT INTO MapInfo (map_rows, map_cols)"
                 + "VALUES (?,?)";
         
         try (Statement deletest = conn.createStatement();
@@ -427,9 +454,8 @@ public class Database {
     
     // inserts the necessary dimensions from the saved map in the database
     // also inserts the value within an index in the map
-    // if there is no map due to new player, then make a new map
     public GameMap loadMap() {
-        String selectMapInfo = "SELECT rows, cols FROM MapInfo";
+        String selectMapInfo = "SELECT map_rows, map_cols FROM MapInfo";
         String selectMapData = "Select row, col, value FROM MapCells";
         char[][] layout = null;
         
@@ -437,8 +463,8 @@ public class Database {
                 ResultSet infors = st.executeQuery(selectMapInfo)) {
             
             if (infors.next()) {
-                int rows = infors.getInt("rows");
-                int cols = infors.getInt("cols");
+                int rows = infors.getInt("map_rows");
+                int cols = infors.getInt("map_cols");
                 layout = new char[rows][cols];
             }
             
@@ -454,12 +480,42 @@ public class Database {
                     }
                 }
             }
-            
         } catch (SQLException e) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
         }
         // if game map is null, makes a new game map
         return layout != null ? new GameMap(layout.length, layout[0].length,
         layout) : new GameMap(5,10);
+    }
+    
+    public GameMap checkAndLoadMap() {
+        String selectMapInfo = "SELECT COUNT(*) AS row_count FROM MapInfo";
+        String selectMapCells = "SELECT COUNT(*) AS cell_count FROM MapCells";
+        
+        try (Statement st = conn.createStatement()) {
+            // Checks if there is any rows saved in MapInfo
+            ResultSet infoResult = st.executeQuery(selectMapInfo);
+            int mapInfoCount = infoResult.next() ? infoResult.getInt("row_count") : 0;
+            
+            // checks if there is any rows saved in MapCells
+            ResultSet cellsResult = st.executeQuery(selectMapCells);
+            int mapCellCount = cellsResult.next() ? cellsResult.getInt("cell_count") : 0;
+            
+            // if both tables are empty, create a new map and save it to the database
+            if (mapInfoCount == 0 || mapCellCount == 0) {
+                Logger.getLogger(Database.class.getName()).log(Level.INFO, 
+                        "No map data found. Creating a new map.");
+                GameMap newMap = new GameMap(5,10);
+                saveMap(newMap);
+                return newMap;
+            }
+            
+            // if there is existing data then load and return existing map
+            return loadMap();
+        } catch(SQLException e) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, 
+                    "No map data found. Creating a new map.");
+            return null; // returns null if there is an issue
+        }
     }
 }

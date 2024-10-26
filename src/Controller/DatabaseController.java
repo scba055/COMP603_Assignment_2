@@ -7,6 +7,9 @@ package Controller;
 
 import Model.*;
 import java.util.Map;
+import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DatabaseController extends Model.Database {
     private final Database db;
@@ -14,6 +17,21 @@ public class DatabaseController extends Model.Database {
     
     public DatabaseController() {
         this.db = Database.getInstance();
+    }
+    
+    // retrieves the active connection
+    public Connection getConnection() {
+        Connection conn = db.getConnection();
+        if (conn == null) {
+            Logger.getLogger(DatabaseController.class.getName()).log(Level.SEVERE,
+                    "Database connection is null.");
+        }
+        return conn;
+    }
+    
+    // closes the database connection when done
+    public void closeDatabase() {
+        db.closeConnection();
     }
     
     // verifies whether the user already exists within the database
@@ -39,7 +57,7 @@ public class DatabaseController extends Model.Database {
     
     // loads the map
     public GameMap loadMap() {
-        return db.loadMap();
+        return db.checkAndLoadMap();
     }
     
     // saves the map

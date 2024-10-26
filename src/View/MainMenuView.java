@@ -43,7 +43,7 @@ public class MainMenuView extends JFrame {
         // Button listeners
         loginButton.addActionListener(e -> showLoginFields());
         signupButton.addActionListener(e -> showSignupFields());
-        exitButton.addActionListener(e -> System.exit(0));
+        exitButton.addActionListener(e -> exit());
 
         confirmLoginButton.addActionListener(e -> login());
         confirmSignupButton.addActionListener(e -> signup());
@@ -82,6 +82,7 @@ public class MainMenuView extends JFrame {
         String password = new String(passwordField.getPassword());
 
         if (dbCon.login(username, password)) {
+            JOptionPane.showMessageDialog(this, "Welcome back " + username + "! Starting your game.");
             // Load existing game data
             Player player = dbCon.loadPlayer(username);
             GameMap map = dbCon.loadMap();
@@ -128,5 +129,11 @@ public class MainMenuView extends JFrame {
         } else {
             JOptionPane.showMessageDialog(this, "Signup failed. Please try again.");
         }
+    }
+    
+    // closes the connection to database and the program
+    private void exit() {
+        dbCon.closeConnection();
+        System.exit(0);
     }
 }
