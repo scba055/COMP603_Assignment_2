@@ -308,48 +308,59 @@ public class Database {
     // saves player data into the database
     public boolean savePlayer(Player player) {
         boolean isSaved = false;
-        String insertPlayerSQL = 
-                "MERGE INTO Player AS P " +
-                "USING (VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)) AS V (" +
-                "username, password, name, health, level, attack," +
-                "defense, exp, gold, row, col" +
-                ")" +
-                "ON P.username = V.username" +
-                "WHEN MATCHED THEN" + // checks for a matching username
-                    "UPDATE SET" + // inserts the stats
-                        "password = V.password, name = V.name, health = V.health,"
-                        + "level = V.level, attack = V.attack, defense = V.defense"
-                        + "exp = V.exp, gold = V.gold, row = V.row, col = V.col" +
-                "WHEN NOT MATCHED THEN" // when no matching username
-                + "INSERT (username, password, name, health, level, attack"
-                + "defense, exp, gold, row, col)"
-                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String selectPlayer = "SELECT id FROM Player WHERE username = ?";
+        String updatePlayer =
+                "UPDATE Player SET password = ?, name = ?, health = ?, level = ?, " +
+                "attack = ?, defense = ?, exp = ?, gold = ?, row = ?, col = ? "
+                + "WHERE username = ?";
+        String insertPlayer = 
+                "INSERT INTO Player (username, password, name, health, level, "
+                + "attack, defense, exp, gold, row, col) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
         
-        try (PreparedStatement newpst = conn.prepareStatement(insertPlayerSQL, 
-                Statement.RETURN_GENERATED_KEYS)) {
-            newpst.setString(1, player.getUsername());
-            newpst.setString(2, player.getPassword());
-            newpst.setString(3, player.getName());
-            newpst.setInt(4, player.getHealth());
-            newpst.setInt(5, player.getLevel());
-            newpst.setInt(6, player.getAttack());
-            newpst.setInt(7, player.getDefense());
-            newpst.setInt(8, player.getEXP());
-            newpst.setInt(9, player.getGold());
-            newpst.setInt(10, player.getRow());
-            newpst.setInt(11, player.getCol());
-            newpst.executeUpdate();
-            
-            // generates player ID (if new entry)
-            try (ResultSet keys = newpst.getGeneratedKeys()) {
-                if (keys.next()) {
-                    int playerId = keys.getInt(1); // retrieve player's id
-                    System.out.println("Player saved with unique ID: " + playerId);
-                    
-                    // saves inventory to player
-                    saveInventory(playerId, player.getInventory());
+        try (PreparedStatement selectStmt = conn.prepareStatement(selectPlayer)) {
+        selectStmt.setString(1, player.getUsername());
+        ResultSet rs = selectStmt.executeQuery();
+
+        
+            if (rs.next()) {
+                // Player exists, perform UPDATE
+                try (PreparedStatement updateStmt = conn.prepareStatement(updatePlayer)) {
+                    updateStmt.setString(1, player.getPassword());
+                    updateStmt.setString(2, player.getName());
+                    updateStmt.setInt(3, player.getHealth());
+                    updateStmt.setInt(4, player.getLevel());
+                    updateStmt.setInt(5, player.getAttack());
+                    updateStmt.setInt(6, player.getDefense());
+                    updateStmt.setInt(7, player.getEXP());
+                    updateStmt.setInt(8, player.getGold());
+                    updateStmt.setInt(9, player.getRow());
+                    updateStmt.setInt(10, player.getCol());
+                    updateStmt.setString(11, player.getUsername());
+
+                    updateStmt.executeUpdate();
+                    System.out.println("Player updated successfully.");
+                }
+            } else {
+                // Player does not exist, perform INSERT
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertPlayer)) {
+                    insertStmt.setString(1, player.getUsername());
+                    insertStmt.setString(2, player.getPassword());
+                    insertStmt.setString(3, player.getName());
+                    insertStmt.setInt(4, player.getHealth());
+                    insertStmt.setInt(5, player.getLevel());
+                    insertStmt.setInt(6, player.getAttack());
+                    insertStmt.setInt(7, player.getDefense());
+                    insertStmt.setInt(8, player.getEXP());
+                    insertStmt.setInt(9, player.getGold());
+                    insertStmt.setInt(10, player.getRow());
+                    insertStmt.setInt(11, player.getCol());
+
+                    insertStmt.executeUpdate();
+                    System.out.println("New player inserted successfully.");
                 }
             }
+        isSaved = true;
             isSaved = true;
         } catch (SQLException e) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, e);
@@ -432,7 +443,7 @@ public class Database {
     }
     
     // saves the coordinates of every component (P, S, E, T, B)
-    public boolean saveMap(GameMap map, Player player, Map<String, Enemy> enemies) {
+    public boolean saveMap(GameMap map) {
         if (!tableExists("MAPCELLS") || !tableExists("MAPINFO")) {
             System.err.println("MAPCELLS or MAPINFO not found. Creating new map tables.");
             createMapTables(); // attempt table creation if missing
@@ -498,7 +509,7 @@ public class Database {
 
         try (Statement st = conn.createStatement();
              ResultSet infoRs = st.executeQuery(selectMapInfo)) {
-
+            //gets the dimensions from the database from MAPINFO
             if (infoRs.next()) {
                 int rows = infoRs.getInt("map_rows");
                 int cols = infoRs.getInt("map_cols");
@@ -511,7 +522,7 @@ public class Database {
 
                 try (PreparedStatement cellst = conn.prepareStatement(selectMapData);
                      ResultSet cellRs = cellst.executeQuery()) {
-
+                    // recreates the map with MAPCELLS
                     while (cellRs.next()) {
                         int row = cellRs.getInt("row");
                         int col = cellRs.getInt("col");
@@ -535,7 +546,7 @@ public class Database {
             } else {
                 System.err.println("No map data found. Creating a new map.");
                 GameMap newMap = new GameMap(5, 10);  // create a 5x10 map
-                saveMap(newMap, player, enemies);  // saves it
+                saveMap(newMap);  // saves it
                 dbCon.printMapCells(); // debug
                 return newMap;
             }

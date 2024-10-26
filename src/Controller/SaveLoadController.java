@@ -26,7 +26,7 @@ public class SaveLoadController {
     public boolean saveGame(Player player, GameMap map) {
         boolean playerSaved = dbCon.savePlayer(player);
         Map<String, Enemy> enemies = dbCon.loadEnemies();
-        boolean mapSaved = dbCon.saveMap(map, player, enemies);
+        boolean mapSaved = dbCon.saveMap(map);
         return playerSaved && mapSaved;
     }
     

@@ -16,7 +16,7 @@ import Controller.*;
 public class GameView extends JFrame {
     private DatabaseController dbCon;
     private final Player player;
-    private final GameMap map;
+    private GameMap map;
     private final Map<String, Enemy> enemies;
     private final Controller.PlayerController pc;
     private final Controller.EncounterController ec;
@@ -45,11 +45,11 @@ public class GameView extends JFrame {
     // custom area for enemy encounters
     private JTextArea enemyStatsArea;
     
-    public GameView(Player player, GameMap map, Map<String, Enemy> enemies, 
+    public GameView(Player player, Map<String, Enemy> enemies, 
             Controller.PlayerController pc, Controller.EncounterController ec,
             Controller.GameController gc, Controller.SaveLoadController slc){
         this.player = player;
-        this.map = map;
+        this.map = new GameMap(5,10); 
         this.enemies = enemies;
         this.pc = pc;
         this.ec = ec;
@@ -303,13 +303,11 @@ public class GameView extends JFrame {
     private void displayMap(GameMap map, Player player, Map<String, Enemy> enemies) {
         mapPanel.removeAll(); // Clear any previous components in the panel
         
-        
-        char[][] layout = map.getMap();
+        char[][] layout = this.map.getMap();
         for (int i = 0; i < layout.length; i++) {
             for (int j = 0; j < layout[i].length; j++) {
                 JLabel cellLabel = new JLabel(String.valueOf(layout[i][j]), SwingConstants.CENTER);
                 cellLabel.setOpaque(true);
-                cellLabel.setBackground(Color.GREEN);  // Default background color
                 cellLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));  // Optional border
 
                 // Customize specific cells (e.g., player's position, enemies, stores, etc.)
@@ -328,7 +326,7 @@ public class GameView extends JFrame {
                 } else if (map.getCell(i, j) == 'B') {
                     cellLabel.setText("B");
                     cellLabel.setBackground(new Color(0xfec5bb));
-                } else { // terrain color
+                } else if (map.getCell(i, j) == '.'){ // terrain color
                     cellLabel.setText(".");
                     cellLabel.setBackground(new Color(0xfcd5ce));
                 }

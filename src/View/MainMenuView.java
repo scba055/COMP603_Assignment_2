@@ -99,7 +99,7 @@ public class MainMenuView extends JFrame {
             SaveLoadController slc = new SaveLoadController(dbCon);
 
             // Transition to GameView
-            new GameView(player, map, enemies, pc, ec, gc, slc);
+            new GameView(player, enemies, pc, ec, gc, slc);
             dispose(); // Close the Main Menu
         } else {
             JOptionPane.showMessageDialog(this, "Invalid credentials. Please try again.");
@@ -133,7 +133,7 @@ public class MainMenuView extends JFrame {
             SaveLoadController slc = new SaveLoadController(dbCon);
 
             // Transition to GameView
-            new GameView(newPlayer, map, enemies, pc, ec, gc, slc);
+            new GameView(newPlayer, enemies, pc, ec, gc, slc);
             dispose(); // Close the Main Menu
         } else {
             JOptionPane.showMessageDialog(this, "Signup failed. Please try again.");
