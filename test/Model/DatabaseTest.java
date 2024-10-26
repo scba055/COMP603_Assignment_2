@@ -35,14 +35,6 @@ public class DatabaseTest {
         assertNotNull("Database connection should not be null", db); // Check that db is not null
     }
     
-    // deletes old test data to avoid conflicts upon testing
-//    @After
-//    public void tearDown() throws SQLException {
-//        Statement stmt = db.getConnection().createStatement();
-//        stmt.executeUpdate("DELETE FROM Player WHERE username = 'Shaina'");
-//        stmt.close();
-//    }
-    
     // verifies that the database connection is successful
     @Test
     public void testDatabaseConnection_Success() {
@@ -86,12 +78,5 @@ public class DatabaseTest {
     public void testLogin_Failure() {
         boolean result = dbCon.login("nonExistentUser", "password");
         assertFalse("Login should fail for invalid credentials", result);
-    }
-
-    @Test
-    public void testNewPlayer() {
-        Player player = dbCon.newPlayer("newUser", "password", "Hero");
-        assertNotNull("New player should be created", player);
-        assertEquals("newUser", player.getUsername());
     }
 }

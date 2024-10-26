@@ -2,7 +2,7 @@ package Controller;
 
 /**
  *
- * @author cabal
+ * @author ywj5422
  */
 
 import Model.*;
@@ -56,13 +56,13 @@ public class DatabaseController extends Model.Database {
     }
     
     // loads the map
-    public GameMap loadMap() {
-        return db.loadMap();
+    public GameMap loadMap(Player player, Map<String, Enemy> enemies) {
+        return db.loadMap(player, enemies);
     }
     
     // saves the map
-    public boolean saveMap(GameMap map) {
-        return db.saveMap(map);
+    public boolean saveMap(GameMap map, Player player, Map<String, Enemy> enemies) {
+        return db.saveMap(map, player, enemies);
     }
     
     public boolean savePlayer(Player player) {

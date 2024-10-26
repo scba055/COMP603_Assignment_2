@@ -18,17 +18,18 @@ public class GameView extends JFrame {
     private final Player player;
     private final GameMap map;
     private final Map<String, Enemy> enemies;
-    private final JTextArea mapDisplay;
     private final Controller.PlayerController pc;
     private final Controller.EncounterController ec;
     private final Controller.GameController gc;
     private final Controller.SaveLoadController slc;
     private boolean enemyButtonFlag = false;
     private boolean storeButtonFlag = false;
-    // private final JTextArea playerStats;
+    // private UI components;
     private JPanel controlPanel;
     private JPanel optionsPanel;
     private JTextArea gameLog;
+    private JTextArea mapDisplay;
+    private JPanel mapPanel;
     
     // custom buttons for encounters (enemy and store)
     private JButton attackButton;
@@ -55,39 +56,45 @@ public class GameView extends JFrame {
         this.gc = gc;
         this.slc = slc;
         
-        // setting up the UI
+        setupUI();
+    }
+    
+    private void setupUI() {
         setTitle("YWJ5422's World");
-        setSize(600, 400); // will change these dimensions as I go
+        setSize(800, 600); 
         setLayout(new BorderLayout());
-        
-        mapDisplay = new JTextArea(10,30);
-        if (map == null) {
-            throw new IllegalStateException("Map data cannot be null.");
-        }
-        mapDisplay.setEditable(false);
-        gameLog = new JTextArea();
-        gameLog.setEditable(false);
-        
-        enemyStatsArea = new JTextArea();
-        enemyStatsArea.setEditable(false);
-        enemyStatsArea.setVisible(false); // should be hidden by default
-        
+
+        // Map Display Panel
+//        mapDisplay = new JTextArea(20, 30);
+//        mapDisplay.setEditable(false);
+//        add(new JScrollPane(mapDisplay), BorderLayout.CENTER);
+        mapPanel = new JPanel();
+        mapPanel.setLayout(new GridLayout(map.getMap().length, map.getMap()[0].length)); // Rows x Columns
+        add(mapPanel, BorderLayout.CENTER);
+
+        // Control Panel (Bottom)
+        controlPanel = new JPanel(new GridLayout(2, 3));
         addControlButtons();
-        addOptionsButtons();
-        
-        add(new JScrollPane(mapDisplay), BorderLayout.CENTER);
         add(controlPanel, BorderLayout.SOUTH);
+
+        // Options Panel (Top)
+        optionsPanel = new JPanel(new FlowLayout());
+        addOptionsButtons();
         add(optionsPanel, BorderLayout.NORTH);
-        
-        // wanting to make the default close window ops to ask the user to save
+
+        // Game Log on the right side
+        gameLog = new JTextArea(10, 20);
+        gameLog.setEditable(false);
+        add(new JScrollPane(gameLog), BorderLayout.EAST);
+
+        // Window close operation
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 handleCloseOperation();
             }
         });
-        
-        // display initial game state
+
         displayMap(map, player, enemies);
         setVisible(true);
     }
@@ -95,7 +102,6 @@ public class GameView extends JFrame {
     // adds directional buttons and interaction buttons
     private void addControlButtons() {
         // adding movement and interactions buttons for user
-        JPanel controlPanel = new JPanel(new GridLayout(2,3));
         JButton upButton = new JButton("△");
         JButton rightButton = new JButton("▷");
         JButton downButton = new JButton("▽");
@@ -169,7 +175,6 @@ public class GameView extends JFrame {
     
     // adding buttons for the options menu
     private void addOptionsButtons() {
-        optionsPanel = new JPanel(new GridLayout(2,3));
         JButton infoButton = new JButton("Player Info");
         JButton signOutButton = new JButton("Sign Out");
         
@@ -212,15 +217,15 @@ public class GameView extends JFrame {
         if (choice == JOptionPane.YES_OPTION) {
             boolean isSaved = slc.saveGame(player, map);
             if (isSaved) {
-                dbCon.closeConnection();
                 System.exit(0); // if successful, then exit
+                dbCon.closeConnection();
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to save", "Error", 
                         JOptionPane.ERROR_MESSAGE);
             }
         } else if (choice == JOptionPane.NO_OPTION) {
-            dbCon.closeConnection();
             System.exit(0); // exit without saving
+            dbCon.closeConnection();
         }
         // cancel option just brings the user back to the game
     }
@@ -290,33 +295,50 @@ public class GameView extends JFrame {
     
     // displays the map, showing 'P' as player's position on map
     private void displayMap(GameMap map, Player player, Map<String, Enemy> enemies) {
-        StringBuilder mapDisplay = new StringBuilder();
-        for (int i = 0; i < map.getMap().length; i++) {
-            for (int j = 0; j < map.getMap()[0].length; j++) {
-               if (i == player.getRow() && j == player.getCol()) {
-                   // output player's position in the map
-                   mapDisplay.append('P' + " "); // output player's pos
-               } else if (map.getCell(i,j) == 'S') {
-                   mapDisplay.append('S' + " "); // store's pos
-               } else if (map.getCell(i,j) == 'E') {
-                   mapDisplay.append('E' + " "); // enemy pos
-               } else if (map.getCell(i, j) == 'T') {
-                   mapDisplay.append('T' + " "); // treasure pos
-               } else if (map.getCell(i, j) == 'B') {
-                   mapDisplay.append('B' + " "); // boss pos
-               } else {
-                   mapDisplay.append('.' + " "); // grass terrain
-               }
+        mapPanel.removeAll(); // Clear any previous components in the panel
+        
+        
+        char[][] layout = map.getMap();
+        for (int i = 0; i < layout.length; i++) {
+            for (int j = 0; j < layout[i].length; j++) {
+                JLabel cellLabel = new JLabel(String.valueOf(layout[i][j]), SwingConstants.CENTER);
+                cellLabel.setOpaque(true);
+                cellLabel.setBackground(Color.GREEN);  // Default background color
+                cellLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));  // Optional border
+
+                // Customize specific cells (e.g., player's position, enemies, stores, etc.)
+                if (i == player.getRow() && j == player.getCol()) {
+                    cellLabel.setText("P"); // Player
+                    cellLabel.setBackground(new Color(0xf8edeb));
+                } else if (layout[i][j] == 'E') {
+                    cellLabel.setText("E");
+                    cellLabel.setBackground(new Color(0xfae1dd));  // Enemy cell
+                } else if (layout[i][j] == 'S') {
+                    cellLabel.setText("S");
+                    cellLabel.setBackground(new Color(0xe8e8e4));  // Store cell
+                } else if (layout[i][j] == 'T') {
+                    cellLabel.setText("T");
+                    cellLabel.setBackground(new Color(0xd8e2dc));
+                } else if (layout[i][j] == 'B') {
+                    cellLabel.setText("B");
+                    cellLabel.setBackground(new Color(0xfec5bb));
+                } else { // terrain color
+                    cellLabel.setText(".");
+                    cellLabel.setBackground(new Color(0xfcd5ce));
+                }
+                // colours from https://coolors.co/palettes/popular/6%20colors
+                mapPanel.add(cellLabel); // Add each cell to the GridLayout
             }
-            mapDisplay.append("\n");
         }
-        JOptionPane.showMessageDialog(null, mapDisplay.toString(), "Game Map", JOptionPane.PLAIN_MESSAGE);
+
+        mapPanel.revalidate();  // Refresh the panel to apply changes
+        mapPanel.repaint();
     } 
     
     // displays player's statuses and inventory, will be used underneath the game map
     private void displayPlayerStats(Player player) {
         StringBuilder playerStats = new StringBuilder();
-        playerStats.append("                  Player's status:\n");
+        playerStats.append("                           \tPlayer's status:\n");
         playerStats.append("==================================================\n");
         playerStats.append("[[Name: ").append(player.getName()).append("]] ")
                   .append("[[Gold: ").append(player.getGold()).append("]]\n");
@@ -325,7 +347,7 @@ public class GameView extends JFrame {
         playerStats.append("[[Level: ").append(player.getLevel()).append("]]\n");
         playerStats.append("[[Attack: ").append(player.getAttack()).append("]]\n");
         playerStats.append("[[Defense: ").append(player.getDefense()).append("]]\n");
-        playerStats.append("                Player's Inventory:\n");
+        playerStats.append("                          \tPlayer's Inventory:\n");
         playerStats.append("==================================================\n");
         playerStats.append(player.getInventory()).append("\n");
         

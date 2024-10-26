@@ -42,7 +42,7 @@ public class GameMap {
     }
     
     // allows for the randomisation of the Boss pointer
-    private void setRandomLocation(char point) {
+    public void setRandomLocation(char point) {
         int row, col;
         row = rand.nextInt(map.length);
         col = rand.nextInt(map[0].length);
@@ -50,7 +50,7 @@ public class GameMap {
     }
     
     // allows for the randomisation of store, enemy, and treasure encounters
-    private void setRandomLocation(char point, int spawnType) {
+    public void setRandomLocation(char point, int spawnType) {
         for (int i = 0; i < spawnType; i++) {
             setRandomLocation(point);
         }
